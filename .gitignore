@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Python test environment
+.venv/
+__pycache__/
+*.pyc
+
+# Release artifacts — the working tree is the source of truth for current code.
+# Older snapshots (Bookdrop-*.zip) stay on disk but are not tracked.
+*.zip
+
+# Local KOReader dev-checkout symlink (machine-specific absolute path)
+dev/koreader
+
+# Separate project with its own git history/remote (fork of opds_plus.koplugin)
+opds_plus.koplugin/

@@ -1,0 +1,5 @@
+Bookdrop's cover-led KOReader menu architecture was informed by
+william-spongberg/KindleFetch.koplugin, distributed under the MIT License.
+
+The implementation in bookdrop_storemenu.lua was rewritten for Bookdrop's
+metadata-only data model and interaction flow.
