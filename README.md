@@ -16,18 +16,24 @@ Copy the `bookdrop.koplugin` folder into KOReader's `plugins` directory and rest
 
 **Curated home** — A network-free browse screen with hand-picked books across fiction, non-fiction, comics, magazines, Spanish, and French shelves. Three titles per category with real cover art bundled in the plugin.
 
-## Building the manga runtime
+## Manga runtime
 
-The manga tab needs a Rust server binary. Build it from [RakuYomi](https://github.com/tachibana-shin/rakuyomi) and place it at `bookdrop.koplugin/manga/server`, or run:
+The Manga tab needs a small Rust server binary (~25 MB). On first use, Bookdrop detects your device and downloads the correct binary automatically — no manual steps required. A Wi-Fi connection is needed for the one-time download.
 
-```
-dev/fetch-manga-binaries.sh
-```
-
-Popular manga sources are bundled as `.aix` files in `bookdrop.koplugin/manga/sources/`. To refresh them after an upstream source update:
+## Building a release zip
 
 ```
-dev/fetch-popular-sources.sh
+dev/package.sh
+```
+
+This runs `fetch-popular-sources.sh` to refresh the bundled `.aix` manga sources, then creates `Bookdrop-latest.zip`. The zip includes everything except the Rust server binary (downloaded on first use by each device).
+
+## Developer scripts
+
+```
+dev/fetch-manga-binaries.sh latest macos     # Pre-install binaries for local testing
+dev/fetch-popular-sources.sh                 # Refresh bundled .aix source files
+dev/run-emulator.sh                          # Launch the KOReader emulator
 ```
 
 ## Tests
