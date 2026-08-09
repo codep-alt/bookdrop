@@ -55,4 +55,4 @@ The pre-installed manga sources are from the [Aidoku community catalog](https://
 
 ## License
 
-MIT. Bundled third-party code retains its original license (see `bookdrop.koplugin/LICENSE-AGPL-3.0` and `bookdrop.koplugin/NOTICE`).
+AGPL-3.0. See [LICENSE](LICENSE) and [NOTICE](bookdrop.koplugin/NOTICE).
