@@ -44,6 +44,15 @@ python3 -m venv .venv
 .venv/bin/python tests/test_provider.py
 ```
 
+## Credits
+
+Bookdrop incorporates code from these projects:
+
+- **[RakuYomi](https://github.com/tachibana-shin/rakuyomi)** (AGPL-3.0) — manga reader, bundled under `bookdrop.koplugin/manga/`
+- **[Z-Library plugin](https://github.com/ZlibraryKO/zlibrary.koplugin)** (AGPL-3.0) — eAPI client, ported into `bookdrop.koplugin/bookdrop_zlibrary_provider.lua`
+
+The pre-installed manga sources are from the [Aidoku community catalog](https://github.com/tachibana-shin/aidoku-community-sources).
+
 ## License
 
-MIT. The bundled RakuYomi runtime is AGPL-3.0 (see `bookdrop.koplugin/LICENSE-AGPL-3.0`). The pre-installed manga sources are from the Aidoku community catalog and carry their own licenses.
+MIT. Bundled third-party code retains its original license (see `bookdrop.koplugin/LICENSE-AGPL-3.0` and `bookdrop.koplugin/NOTICE`).
