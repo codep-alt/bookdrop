@@ -2,6 +2,8 @@
 
 All-in-one reading for KOReader — search and download from public libraries, Z-Library, and manga sources without leaving the app.
 
+[![Ko-fi](https://img.shields.io/badge/Support-ko--fi-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/davidc465)
+
 ## Install
 
 Copy the `bookdrop.koplugin` folder into KOReader's `plugins` directory and restart KOReader.
