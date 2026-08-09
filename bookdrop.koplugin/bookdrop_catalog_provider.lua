@@ -1,10 +1,11 @@
 local InternetArchive = require("bookdrop_provider")
 local OPDS = require("bookdrop_opds_provider")
+local ZlibraryProvider = require("bookdrop_zlibrary_provider")
 
 local CatalogProvider = { page_size = 10 }
 
 CatalogProvider.source_order = {
-    "gutenberg", "standardebooks", "textos", "gallica", "internet_archive",
+    "gutenberg", "standardebooks", "textos", "gallica", "internet_archive", "zlibrary",
 }
 
 CatalogProvider.sources = {
@@ -13,6 +14,7 @@ CatalogProvider.sources = {
     textos = "textos.info",
     gallica = "Gallica",
     internet_archive = "Internet Archive",
+    zlibrary = "Z-Library",
 }
 
 local SOURCE_PRIORITY = {
@@ -21,6 +23,7 @@ local SOURCE_PRIORITY = {
     textos = 3,
     gallica = 4,
     internet_archive = 5,
+    zlibrary = 6,
 }
 
 local function normalize(value)
@@ -126,12 +129,16 @@ local function containsAll(haystack, needles)
     return #needles > 0
 end
 
-local function relevance(book, query)
+local function relevance(book, query, filters)
     local phrase = normalize(query)
     local title, author = normalize(book.title), normalize(book.author)
     local combined = title .. " " .. author .. " " .. normalize(book.subjects)
     local tokens = queryWords(query)
     local score = 60 - 8 * (SOURCE_PRIORITY[book.provider] or 6)
+    if filters and filters.libraries and filters.libraries.zlibrary
+        and book.provider == "zlibrary" then
+        score = score + 48
+    end
     if phrase == "" then return score end
     if title == phrase then score = score + 1200
     elseif (title .. " "):find(phrase .. " ", 1, true) == 1 then score = score + 1000
@@ -148,10 +155,10 @@ local function publicationYear(book)
     return tonumber(book.year) or tonumber(tostring(book.published_date or ""):match("(%d%d%d%d)"))
 end
 
-function CatalogProvider:sortBooks(books, query, sort)
+function CatalogProvider:sortBooks(books, query, sort, filters)
     for position, book in ipairs(books or {}) do
         book._catalog_position = position
-        book._catalog_relevance = relevance(book, query)
+        book._catalog_relevance = relevance(book, query, filters)
         book._catalog_title = normalize(book.title)
         book._catalog_year = publicationYear(book)
     end
@@ -205,6 +212,8 @@ function CatalogProvider:search(query, page, filters)
                 if result then
                     for _, book in ipairs(result.books) do book.provider = source_id end
                 end
+            elseif source_id == "zlibrary" then
+                result, err = ZlibraryProvider:search(query, page, filters)
             else
                 result, err = OPDS:searchSource(source_id, query, page, filters)
             end
@@ -230,7 +239,7 @@ function CatalogProvider:search(query, page, filters)
         books = relevant
         total = #books
     end
-    self:sortBooks(books, query, filters.sort)
+    self:sortBooks(books, query, filters.sort, filters)
     return {
         books = books,
         total = math.max(total, #books),
@@ -244,6 +253,8 @@ end
 function CatalogProvider:hydrate(book)
     if book and (book.provider == "internet_archive" or not book.provider) then
         return InternetArchive:hydrate(book)
+    elseif book and book.provider == "zlibrary" then
+        return ZlibraryProvider:hydrate(book)
     end
     return OPDS:hydrate(book)
 end

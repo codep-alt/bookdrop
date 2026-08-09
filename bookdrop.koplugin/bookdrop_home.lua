@@ -361,14 +361,19 @@ function StoreHome:init()
 
     self.book_tiles = {}
     local nav_h = Screen:scaleBySize(42)
-    local nav_left_w = math.floor(content_w * 0.62)
+    -- Three top-level tabs: categories, libraries, and the bundled manga app.
+    local nav_left_w = math.floor(content_w * 0.36)
+    local nav_mid_w = math.floor(content_w * 0.30)
     local content = VerticalGroup:new{
         align = "left",
         HorizontalGroup:new{
             self:link(_("BROWSE CATEGORIES  ▾"), function() self:showCategories() end,
                 nav_left_w, nav_h, true, true),
             self:link(_("LIBRARIES  ▾"), function() self:showSettings() end,
-                content_w - nav_left_w, nav_h, true, true),
+                nav_mid_w, nav_h, true, true),
+            self:link(_("MANGA"), function()
+                if self.on_manga then self.on_manga(self) end
+            end, content_w - nav_left_w - nav_mid_w, nav_h, true, true),
         },
         self:rule(content_w),
         VerticalSpan:new{ width = section_gap },

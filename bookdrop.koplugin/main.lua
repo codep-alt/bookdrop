@@ -11,6 +11,7 @@ local LuaSettings = require("luasettings")
 local LoadingView = require("bookdrop_loadingview")
 local NetworkMgr = require("ui/network/manager")
 local Provider = require("bookdrop_catalog_provider")
+local Zlibrary = require("bookdrop_zlibrary_provider")
 local StoreMenu = require("bookdrop_storemenu")
 local StoreHome = require("bookdrop_home")
 local Trapper = require("ui/trapper")
@@ -38,6 +39,7 @@ local library_options = {
     { "textos", "textos.info" },
     { "gallica", "Gallica" },
     { "internet_archive", "Internet Archive" },
+    { "zlibrary", "Z-Library" },
 }
 local language_options = {
     { "", "All languages" }, { "en", "English" }, { "es", "Spanish" },
@@ -78,6 +80,191 @@ function Bookdrop:init()
     end
     self:onDispatcherRegisterActions()
     self.ui.menu:registerToMainMenu(self)
+    self.manga_plugin = self:loadBundledManga()
+end
+
+-- The RakuYomi manga plugin (AGPL-3.0, https://github.com/tachibana-shin/rakuyomi)
+-- is bundled unchanged under manga/ so Bookdrop is the single plugin users
+-- install. It is booted the way KOReader's plugin loader boots a plugin:
+-- dofile its main.lua, then InputContainer:new{ ui = self.ui } runs its init,
+-- and it is registered as a UI module so events reach it. Its Rust server
+-- binary is started lazily on first use, so a missing binary (not built for
+-- this device) only disables the Manga tab, never Bookdrop itself.
+function Bookdrop:loadBundledManga()
+    local manga_root = self.path .. "/manga"
+    package.path = manga_root .. "/?.lua;" .. package.path
+    local ok, RakuyomiMain = pcall(dofile, manga_root .. "/main.lua")
+    if not ok or type(RakuyomiMain) ~= "table" then
+        require("logger").warn("Bookdrop: bundled manga plugin failed to load: "
+            .. tostring(RakuyomiMain))
+        return nil
+    end
+    local instance_ok, instance = pcall(RakuyomiMain.new, RakuyomiMain, { ui = self.ui })
+    if not instance_ok or not instance then
+        require("logger").warn("Bookdrop: bundled manga plugin failed to initialize: "
+            .. tostring(instance))
+        return nil
+    end
+    if self.ui.registerModule then
+        self.ui:registerModule("rakuyomi", instance)
+    end
+    -- Seed the Aidoku community source list and the bundled manga source files
+    -- on first run.  Popular sources (7 .aix files downloaded at build time by
+    -- dev/fetch-popular-sources.sh) are copied into the server's sources directory
+    -- so users can search and download immediately without installing anything.
+    pcall(function()
+        local lfs = require("libs/libkoreader-lfs")
+        local data_dir = require("datastorage"):getDataDir()
+        local rakuyomi_dir = data_dir .. "/rakuyomi"
+        if lfs.attributes(rakuyomi_dir, "mode") ~= "directory" then
+            lfs.mkdir(rakuyomi_dir)
+        end
+        local settings_path = rakuyomi_dir .. "/settings.json"
+        if not lfs.attributes(settings_path, "mode") then
+            local fh = io.open(settings_path, "w")
+            if fh then
+                fh:write([=[
+{"source_lists":["https://raw.githubusercontent.com/tachibana-shin/aidoku-community-sources/gh-pages/index.min.json"]}
+]=])
+                fh:close()
+            end
+        end
+        -- Seed bundled .aix source files (installed once, never overwritten)
+        local bundled_dir = self.path .. "/manga/sources"
+        if lfs.attributes(bundled_dir, "mode") == "directory" then
+            local rakuyomi_sources = rakuyomi_dir .. "/sources"
+            if lfs.attributes(rakuyomi_sources, "mode") ~= "directory" then
+                lfs.mkdir(rakuyomi_sources)
+            end
+            -- Purge macOS resource-fork turds (._*) that may have been
+            -- copied alongside real .aix files on previous installs.
+            for file in lfs.dir(rakuyomi_sources) do
+                if file:match("^%._") then
+                    os.remove(rakuyomi_sources .. "/" .. file)
+                end
+            end
+            local ffiutil = require("ffi/util")
+            local first = true
+            for file in lfs.dir(bundled_dir) do
+                -- Skip macOS resource-fork turds (._*) and hidden files
+                if file:match("%.aix$") and not file:match("^%.") then
+                    local dest = rakuyomi_sources .. "/" .. file
+                    if not lfs.attributes(dest, "mode") then
+                        ffiutil.copyFile(bundled_dir .. "/" .. file, dest)
+                        if first then
+                            logger.dbg("Bookdrop: seeding pre-installed manga sources")
+                            first = false
+                        end
+                    end
+                end
+            end
+        end
+    end)
+    return instance
+end
+
+function Bookdrop:openManga()
+    local manga = self.manga_plugin
+    if not (manga and manga.openLibraryView) then
+        UIManager:show(InfoMessage:new{
+            text = _("Manga is not available in this build."),
+        })
+        return
+    end
+
+    local MangaDownloader = require("manga_downloader")
+    local server_path = self.path .. "/manga/server"
+    local valid, _ = MangaDownloader.validateBinary(server_path)
+
+    if valid then
+        -- Binary exists and matches this platform — launch immediately.
+        local ok, err = pcall(manga.openLibraryView, manga)
+        if not ok then
+            UIManager:show(InfoMessage:new{
+                text = string.format(_("Manga failed to start: %s"), tostring(err)),
+            })
+        end
+        return
+    end
+
+    -- Invalid or missing binary — delete whatever is there and offer download.
+    if valid == false then
+        os.remove(server_path)
+        os.remove(self.path .. "/manga/cbz_metadata_reader")
+    end
+    self:_offerMangaDownload(manga)
+end
+
+function Bookdrop:_offerMangaDownload(manga)
+    local MangaDownloader = require("manga_downloader")
+    local platform = MangaDownloader.detectPlatform()
+    UIManager:show(ConfirmBox:new{
+        text = T(_(
+            "The manga reader needs a small runtime (~25 MB) to be downloaded "
+            .. "once for your device (%1).\n\nDownload now?"
+        ), platform),
+        ok_text = _("Download"),
+        ok_callback = function()
+            -- Defer to next tick so the offer dialog fully closes
+            -- before the download progress UI appears.
+            UIManager:nextTick(function()
+                self:_startMangaDownload(manga)
+            end)
+        end,
+        cancel_text = _("Not now"),
+        cancel_callback = function()
+            self:showStoreHome()
+        end,
+    })
+end
+
+function Bookdrop:_startMangaDownload(manga)
+    local MangaDownloader = require("manga_downloader")
+    local NetworkMgr = require("ui/network/manager")
+    NetworkMgr:runWhenConnected(function()
+        local loading = InfoMessage:new{
+            text = _("Downloading manga runtime…\n\nPlease wait."),
+            dismissable = false,
+        }
+        UIManager:show(loading)
+        UIManager:forceRePaint()
+
+        local ok, err
+        Trapper:wrap(function()
+            ok, err = MangaDownloader.downloadAndInstall(self.path .. "/manga")
+        end)
+
+        UIManager:close(loading)
+
+        if ok then
+            UIManager:show(InfoMessage:new{
+                text = _("Manga reader is ready."),
+                timeout = 1.5,
+            })
+            UIManager:scheduleIn(0.3, function()
+                local launch_ok, launch_err = pcall(manga.openLibraryView, manga)
+                if not launch_ok then
+                    UIManager:show(InfoMessage:new{
+                        text = string.format(_("Manga failed to start: %s"), tostring(launch_err)),
+                    })
+                end
+            end)
+        else
+            UIManager:show(ConfirmBox:new{
+                text = T(_("Could not download the manga runtime:\n%1\n\nTry again?"), err or _("unknown error")),
+                ok_text = _("Retry"),
+                ok_callback = function()
+                    UIManager:nextTick(function()
+                        self:_startMangaDownload(manga)
+                    end)
+                end,
+                cancel_text = _("Not now"),
+                cancel_callback = function()
+                    self:showStoreHome()
+                end,
+            })
+        end
+    end)
 end
 
 function Bookdrop:onDispatcherRegisterActions()
@@ -124,6 +311,7 @@ function Bookdrop:getFilters()
         for option_number, option in ipairs(library_options) do
             filters.libraries[option[1]] = true
         end
+        filters.libraries.zlibrary = nil
         changed = true
     end
     if filters.libraries.manybooks ~= nil then
@@ -466,6 +654,7 @@ function Bookdrop:presentStoreHome(featured_books, shelf_books)
         on_new_arrivals = function() self:openShelf(_("New arrivals"), nil, "newest") end,
         on_all_books = function() self:openShelf(_("All books"), nil, "") end,
         on_recent = function() self:showRecentBooks() end,
+        on_manga = function() self:openManga() end,
         settings_builder = function(home) return self:settingsDropdownEntries(home) end,
     }
     UIManager:show(home)
@@ -534,6 +723,11 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
             local http = require("socket.http")
             local ltn12 = require("ltn12")
             local socketutil = require("socketutil")
+            local headers = {
+                ["Accept-Encoding"] = "identity",
+                ["User-Agent"] = "KOReader Bookdrop/0.5",
+            }
+            if acquisition.referer then headers["Referer"] = acquisition.referer end
             local ok, err = pcall(function()
                 local output, open_err = io.open(part_path, "wb")
                 if not output then error(open_err or "cannot create destination") end
@@ -542,10 +736,7 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
                     url = acquisition.url,
                     method = "GET",
                     redirect = true,
-                    headers = {
-                        ["Accept-Encoding"] = "identity",
-                        ["User-Agent"] = "KOReader Bookdrop/0.5",
-                    },
+                    headers = headers,
                     sink = ltn12.sink.file(output),
                 }
                 socketutil:reset_timeout()
@@ -702,12 +893,25 @@ function Bookdrop:settingsDropdownEntries(home)
             home:showSettings(self:choiceDropdownEntries(
                 home, _("Sort order"), "sort", sort_options))
         end },
+        { text = _("Z-Library") .. (Zlibrary.isSignedIn() and "  ·  " .. _("signed in") or ""), bold = true, separator = true },
+        { text = _("Z-Library sign-in"), callback = function()
+            self:showZlibrarySignInDialog(home)
+        end },
+        { text = _("Z-Library base URL") .. "  ·  " .. Zlibrary.getBaseUrl() .. "  ›", callback = function()
+            self:showZlibraryBaseUrlDialog(home)
+        end },
+        { text = _("Z-Library sign out"), callback = function()
+            Zlibrary.signOut()
+            UIManager:show(InfoMessage:new{ text = _("Signed out of Z-Library.") })
+            if home then home:showSettings(self:settingsDropdownEntries(home)) end
+        end },
         { text = _("Clear cover cache"), callback = function()
             CoverCache:clear()
             UIManager:show(InfoMessage:new{ text = _("Cached covers cleared.") })
         end },
     }
 end
+
 
 function Bookdrop:showSearchDialog(parent_widget, initial_query)
     local dialog
@@ -736,6 +940,7 @@ function Bookdrop:showSearchDialog(parent_widget, initial_query)
         }},
     }
     UIManager:show(dialog)
+    dialog.skip_first_show_keyboard = nil
     dialog:onShowKeyboard()
 end
 
@@ -747,6 +952,99 @@ local function appendUniqueBooks(target, additions, seen)
             target[#target + 1] = book
         end
     end
+end
+
+-- ------------------------------------------------------------ Z-Library settings
+
+function Bookdrop:showZlibraryBaseUrlDialog(home)
+    local dialog
+    dialog = InputDialog:new{
+        title = _("Z-Library base URL"),
+        input = Zlibrary.getBaseUrl(),
+        input_hint = _("https://your.zlibrary.domain"),
+        buttons = {{
+            { text = _("Cancel"), id = "close", callback = function()
+                UIManager:close(dialog)
+            end },
+            { text = _("Save"), is_enter_default = true, callback = function()
+                local value = dialog:getInputText()
+                UIManager:close(dialog)
+                local ok, err = Zlibrary.setBaseUrl(value)
+                UIManager:show(InfoMessage:new{
+                    text = ok and _("Base URL saved.") or (err or _("Invalid base URL.")),
+                })
+                if home then home:showSettings(self:settingsDropdownEntries(home)) end
+            end },
+        }},
+    }
+    UIManager:show(dialog)
+    dialog.skip_first_show_keyboard = nil
+    dialog:onShowKeyboard()
+end
+
+function Bookdrop:showZlibrarySignInDialog(home)
+    local dialog
+    dialog = InputDialog:new{
+        title = _("Z-Library email"),
+        input = Zlibrary.getCredentials().email or "",
+        input_hint = _("Email"),
+        buttons = {{
+            { text = _("Cancel"), id = "close", callback = function()
+                UIManager:close(dialog)
+            end },
+            { text = _("Next"), is_enter_default = true, callback = function()
+                local email = dialog:getInputText()
+                UIManager:close(dialog)
+                self:showZlibraryPasswordDialog(home, email)
+            end },
+        }},
+    }
+    UIManager:show(dialog)
+    dialog.skip_first_show_keyboard = nil
+    dialog:onShowKeyboard()
+end
+
+function Bookdrop:showZlibraryPasswordDialog(home, email)
+    local dialog
+    dialog = InputDialog:new{
+        title = _("Z-Library password"),
+        input = "",
+        input_type = "password",
+        buttons = {{
+            { text = _("Cancel"), id = "close", callback = function()
+                UIManager:close(dialog)
+            end },
+            { text = _("Sign in"), is_enter_default = true, callback = function()
+                local password = dialog:getInputText()
+                UIManager:close(dialog)
+                self:performZlibraryLogin(home, email, password)
+            end },
+        }},
+    }
+    UIManager:show(dialog)
+    dialog.skip_first_show_keyboard = nil
+    dialog:onShowKeyboard()
+end
+
+function Bookdrop:performZlibraryLogin(home, email, password)
+    local loading = InfoMessage:new{ text = _("Signing in…"), dismissable = false }
+    UIManager:show(loading)
+    local finished = false
+    local function finish(success, err)
+        if finished then return end
+        finished = true
+        UIManager:close(loading)
+        if success then
+            UIManager:show(InfoMessage:new{ text = _("Signed in to Z-Library.") })
+        else
+            UIManager:show(InfoMessage:new{ text = err or _("Z-Library sign-in failed.") })
+        end
+        if home then home:showSettings(self:settingsDropdownEntries(home)) end
+    end
+    Trapper:wrap(function()
+        local ok, err = Zlibrary.login(email, password)
+        finish(ok, err)
+    end)
 end
 
 function Bookdrop:runSearch(query, page_number, filters, title, continuation)
@@ -775,10 +1073,6 @@ function Bookdrop:runSearch(query, page_number, filters, title, continuation)
                 page.books = merged
                 page.total = math.max(tonumber(page.total) or 0, #merged)
                 page.has_previous = false
-                -- Each catalog page is already ordered by the selected sort.
-                -- Re-sorting the combined list moved newly fetched records in
-                -- front of records the reader had already seen, which made
-                -- LOAD MORE appear to grow upward. Keep pagination append-only.
             end
             UIManager:close(loading)
             self:showResults(query, filters, title, page,

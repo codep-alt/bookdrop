@@ -1,0 +1,20 @@
+Bookdrop's Z-Library support (bookdrop_zlibrary_provider.lua) is ported from
+the Z-Library plugin for KOReader
+(https://github.com/ZlibraryKO/zlibrary.koplugin), which is distributed under
+the GNU Affero General Public License v3 (AGPL-3.0). The ported code covers
+the eAPI client (login, search, book details, download-link resolution), the
+base-URL/session handling, and the request-building conventions of that
+plugin; the full license text is in LICENSE-AGPL-3.0 alongside this notice,
+and the source project is at the URL above.
+
+Per AGPL-3.0, the combined Bookdrop plugin (which contains this AGPL-derived
+code alongside its MIT-licensed parts) is distributed under the AGPL-3.0; the
+MIT-licensed parts retain their own license for use outside the combined work.
+
+## Manga
+
+Bookdrop bundles the RakuYomi manga plugin (https://github.com/tachibana-shin/rakuyomi,
+AGPL-3.0) under bookdrop.koplugin/manga/, vendored from its frontend with one
+documented path fix (see manga/README.md). Its license text is in
+bookdrop.koplugin/manga/LICENSE-AGPL-3.0, and its Rust server binary is built
+per device and dropped into bookdrop.koplugin/manga/server (not committed).

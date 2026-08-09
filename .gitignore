@@ -13,5 +13,17 @@ __pycache__/
 # Local KOReader dev-checkout symlink (machine-specific absolute path)
 dev/koreader
 
+# Reasonix internal state
+.reasonix/
+
 # Separate project with its own git history/remote (fork of opds_plus.koplugin)
 opds_plus.koplugin/
+
+# Separate project with its own git history/remote (ZlibraryKO/zlibrary.koplugin)
+zlibrary.koplugin/
+
+# Reference clone (tachibana-shin/rakuyomi) — inspection only
+rakuyomi-ref/
+
+# IDE config
+.vscode/

@@ -1,0 +1,413 @@
+local CheckMark = require("ui/widget/checkmark")
+local GestureRange = require("ui/gesturerange")
+local Font = require("ui/font")
+local InputContainer = require("ui/widget/container/inputcontainer")
+local InputDialog = require("ui/widget/inputdialog")
+local PathChooser = require("ui/widget/pathchooser")
+local RadioButtonWidget = require("ui/widget/radiobuttonwidget")
+local SpinWidget = require("ui/widget/spinwidget")
+local TextBoxWidget = require("ui/widget/textboxwidget")
+local TextWidget = require("ui/widget/textwidget")
+local ButtonWidget = require("ui/widget/button")
+local UIManager = require("ui/uimanager")
+local ConfirmBox = require("ui/widget/confirmbox")
+local Trapper = require("ui/trapper")
+local LoadingDialog = require("LoadingDialog")
+local Backend = require("Backend")
+local ErrorDialog = require("ErrorDialog")
+local InfoMessage = require("ui/widget/infomessage")
+local _ = require("gettext+")
+local CheckboxDialog = require("CheckboxDialog")
+
+local Icons = require("Icons")
+
+local SETTING_ITEM_FONT_SIZE = 18
+
+--- @class DividerDefinition: { type: 'divider', title: string }
+--- @class BooleanValueDefinition: { type: 'boolean', is_local: boolean|nil, default: boolean|nil }
+--- @class EnumValueDefinitionOption: { label: string, value: string }
+--- @class EnumValueDefinition: { type: 'enum', title: string, options: EnumValueDefinitionOption[], default: string|nil }
+--- @class MultiEnumValueDefinition: { type: 'multi-enum', title: string, options: EnumValueDefinitionOption[] }
+--- @class IntegerValueDefinition: { type: 'integer', title: string, min_value: number, max_value: number, unit?: string, is_local: boolean|nil, default: number|nil }
+--- @class StringValueDefinition: { type: 'string', title: string, placeholder: string, validate_error?: string, validate?: fun(value: string): boolean }
+--- @class ListValueDefinition: { type: 'list', title: string, placeholder: string }
+--- @class LabelValueDefinition: { type: 'label', title: string, text: string }
+--- @class PathValueDefinition: { type: 'path', title: string, path_type: 'directory' }
+--- @class ButtonDefinition: { type: 'button', title: string, key: string|nil, callback: (fun():nil)|nil, confirm_title: string|nil, confirm_message: string|nil }
+
+--- @alias ValueDefinition DividerDefinition|BooleanValueDefinition|EnumValueDefinition|MultiEnumValueDefinition|IntegerValueDefinition|StringValueDefinition|ListValueDefinition|LabelValueDefinition|PathValueDefinition|ButtonDefinition
+
+--- @class SettingItemValue: { [any]: any }
+--- @field value_definition ValueDefinition
+local SettingItemValue = InputContainer:extend {
+  show_parent = nil,
+  max_width = nil,
+  value_definition = nil,
+  value = nil,
+  on_value_changed_callback = nil,
+  source_id = nil,
+}
+
+--- @private
+function SettingItemValue:init()
+  self.show_parent = self.show_parent or self
+
+  self.ges_events = {
+    Tap = {
+      GestureRange:new {
+        ges = "tap",
+        range = function()
+          return self.dimen
+        end
+      }
+    },
+  }
+
+  self[1] = self:createValueWidget()
+end
+
+--- @private
+--- @return any
+function SettingItemValue:getCurrentValue()
+  if (self.value_definition.type == 'enum' or self.value_definition.type == 'multi-enum') and self.value == nil then
+    return self.value_definition.options[1].value
+  end
+  return self.value
+end
+
+--- @private
+function SettingItemValue:createValueWidget()
+  -- REFACT maybe split this into multiple widgets, one for each value definition type
+  if self.value_definition.type == "enum" then
+    local label_for_value = {}
+    for _, option in ipairs(self.value_definition.options) do
+      label_for_value[option.value] = option.label
+    end
+
+    return TextWidget:new {
+      text = label_for_value[self:getCurrentValue()] .. " " .. Icons.UNICODE_ARROW_RIGHT,
+      editable = true,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+    }
+  elseif self.value_definition.type == "multi-enum" then
+    local label_for_value = {}
+    for _, option in ipairs(self.value_definition.options) do
+      label_for_value[option.value] = option.label
+    end
+
+    local keys = self:getCurrentValue()
+
+    local labels = {}
+    for _, key in ipairs(keys) do
+      local label = label_for_value[key]
+      if label then
+        table.insert(labels, label)
+      end
+    end
+
+    return TextWidget:new {
+      text = table.concat(labels, ", ") .. " " .. Icons.UNICODE_ARROW_RIGHT,
+      editable = true,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+    }
+  elseif self.value_definition.type == "boolean" then
+    return CheckMark:new {
+      checked = self:getCurrentValue(),
+      face = Font:getFace("smallinfofont", SETTING_ITEM_FONT_SIZE),
+    }
+  elseif self.value_definition.type == "integer" then
+    return TextWidget:new {
+      text = self:getCurrentValue() .. (self.value_definition.unit and (' ' .. self.value_definition.unit) or '') .. ' ' .. Icons.UNICODE_ARROW_RIGHT,
+      editable = true,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+    }
+  elseif self.value_definition.type == "string" then
+    local value = self:getCurrentValue()
+    if value == nil or value == "" then
+      value = _("Not set")
+    end
+    return TextWidget:new {
+      text = value,
+      editable = true,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+    }
+  elseif self.value_definition.type == "list" then
+    local value = table.concat(self:getCurrentValue() or {}, "\n")
+    if value == "" then
+      value = _("Not set")
+    end
+    return TextWidget:new {
+      text = value,
+      editable = true,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+    }
+  elseif self.value_definition.type == "label" then
+    return TextBoxWidget:new {
+      text = self.value_definition.text,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+    }
+  elseif self.value_definition.type == "path" then
+    return TextWidget:new {
+      text = self:getCurrentValue() .. " " .. Icons.UNICODE_ARROW_RIGHT,
+      editable = true,
+      face = Font:getFace("cfont", SETTING_ITEM_FONT_SIZE),
+      max_width = self.max_width,
+      truncate_left = true,
+    }
+  elseif self.value_definition.type == "button" then
+    return ButtonWidget:new {
+      text = self.value_definition.title,
+      callback = function()
+        local function executeAction()
+          Trapper:wrap(function()
+            local response = LoadingDialog:showAndRun(
+              _("Executing..."),
+              function()
+                return Backend.handleSourceNotification(Backend.createCancelId(), self.source_id,
+                  self.value_definition.key)
+              end
+            )
+
+            if response.type == 'ERROR' then
+              ErrorDialog:show(response.message)
+
+              return
+            end
+
+            UIManager:show(InfoMessage:new { text = _("Done") })
+          end)
+        end
+
+        -- Per the official Aidoku schema, both `confirmTitle` and `confirmText` (`confirm_message`
+        -- here) are optional on a button setting. Only show a confirmation dialog when at least
+        -- one of them is present, and only concatenate the parts that actually exist, so we never
+        -- try to concatenate a nil value.
+        local confirm_title = self.value_definition.confirm_title
+        local confirm_message = self.value_definition.confirm_message
+
+        if confirm_title or confirm_message then
+          local text_parts = {}
+          if confirm_title then
+            table.insert(text_parts, confirm_title)
+          end
+          if confirm_message then
+            table.insert(text_parts, confirm_message)
+          end
+
+          local confirm_dialog
+          confirm_dialog = ConfirmBox:new {
+            text = table.concat(text_parts, "\n\n"),
+            ok_text = _("Ok"),
+            cancel_text = _("Cancel"),
+            ok_callback = function()
+              UIManager:close(confirm_dialog)
+              executeAction()
+            end,
+          }
+
+          UIManager:show(confirm_dialog)
+        else
+          executeAction()
+        end
+      end
+    }
+  else
+    error("unexpected value definition type: " .. self.value_definition.type)
+  end
+end
+
+-- split string by delimiter (default = whitespace)
+local function split(str, sep)
+  sep = sep or "%s" -- default split on whitespace
+  local result = {}
+
+  -- iterate matches separated by 'sep'
+  for part in string.gmatch(str, "([^" .. sep .. "]+)") do
+    table.insert(result, part)
+  end
+
+  return result
+end
+
+--- @private
+function SettingItemValue:onTap()
+  if self.value_definition.type == "enum" then
+    local radio_buttons = {}
+    for _, option in ipairs(self.value_definition.options) do
+      table.insert(radio_buttons, {
+        {
+          text = option.label,
+          provider = option.value,
+          checked = self:getCurrentValue() == option.value,
+        },
+      })
+    end
+
+    local dialog
+    dialog = RadioButtonWidget:new {
+      title_text = self.value_definition.title,
+      radio_buttons = radio_buttons,
+      callback = function(radio)
+        UIManager:close(dialog)
+
+        self:updateCurrentValue(radio.provider)
+      end
+    }
+
+    UIManager:show(dialog)
+  elseif self.value_definition.type == "multi-enum" then
+    ---@diagnostic disable-next-line: redundant-parameter
+    local dialog = CheckboxDialog:new {
+      title = _("Select"),
+      current = self:getCurrentValue(),
+      options = self.value_definition.options,
+      update_callback = function(value)
+        self:updateCurrentValue(value)
+      end
+    }
+
+    UIManager:show(dialog)
+  elseif self.value_definition.type == "boolean" then
+    self:updateCurrentValue(not self:getCurrentValue())
+  elseif self.value_definition.type == "integer" then
+    local dialog = SpinWidget:new {
+      title_text = self.value_definition.title,
+      value = self:getCurrentValue(),
+      value_min = self.value_definition.min_value,
+      value_max = self.value_definition.max_value,
+      callback = function(spin)
+        self:updateCurrentValue(spin.value)
+      end,
+    }
+
+    UIManager:show(dialog)
+  elseif self.value_definition.type == "string" then
+    local dialog
+    dialog = InputDialog:new {
+      title = self.value_definition.title,
+      input = self:getCurrentValue() or "",
+      input_hint = self.value_definition.placeholder,
+      buttons = {
+        {
+          {
+            text = _("Cancel"),
+            id = "close",
+            callback = function()
+              UIManager:close(dialog)
+            end,
+          },
+          {
+            text = _("Save"),
+            is_enter_default = true,
+            callback = function()
+              UIManager:close(dialog)
+
+              self:updateCurrentValue(dialog:getInputText())
+            end,
+          },
+        }
+      }
+    }
+
+    -- Prevent the tap that opened this dialog from reaching InputDialog:onTap,
+    -- which would close it immediately (dialog_frame.dimen is nil before first paint,
+    -- so notIntersectWith(nil) returns true, triggering onCloseDialog).
+    dialog.deny_keyboard_hiding = true
+    UIManager:show(dialog)
+    UIManager:nextTick(function()
+      dialog.deny_keyboard_hiding = nil
+      dialog:onShowKeyboard()
+    end)
+  elseif self.value_definition.type == "list" then
+    local dialog
+    dialog = InputDialog:new {
+      title = self.value_definition.title,
+      input = table.concat(self:getCurrentValue() or {}, "\n"),
+      input_hint = self.value_definition.placeholder,
+      buttons = {
+        {
+          {
+            text = "Cancel",
+            id = "close",
+            callback = function()
+              UIManager:close(dialog)
+            end,
+          },
+          {
+            text = "Save",
+            is_enter_default = true,
+            callback = function()
+              UIManager:close(dialog)
+
+              self:updateCurrentValue(split(dialog:getInputText(), "\n"))
+            end,
+          },
+        }
+      }
+    }
+
+    -- Same fix as "string" type: block the originating tap from closing the dialog.
+    dialog.deny_keyboard_hiding = true
+    UIManager:show(dialog)
+    UIManager:nextTick(function()
+      dialog.deny_keyboard_hiding = nil
+      dialog:onShowKeyboard()
+    end)
+  elseif self.value_definition.type == "path" then
+    local path_chooser
+    path_chooser = PathChooser:new({
+      title = self.value_definition.title,
+      path = self:getCurrentValue(),
+      onConfirm = function(new_path)
+        self:updateCurrentValue(new_path)
+        UIManager:close(path_chooser)
+      end,
+      file_filter = function()
+        -- This is a directory chooser, so don't show files
+        return false
+      end,
+      select_directory = true,
+      select_file = false,
+      show_files = false,
+      show_current_dir_for_hold = true,
+    })
+    UIManager:show(path_chooser)
+  end
+
+  return true
+end
+
+--- @private
+function SettingItemValue:updateCurrentValue(new_value)
+  if self.value_definition.validate then
+    local input = type(new_value) == "string" and new_value or ""
+    if not self.value_definition.validate(input) then
+      UIManager:show(InfoMessage:new {
+        text = self.value_definition.validate_error or _("Invalid value"),
+      })
+      return false
+    end
+  end
+
+  local old = self.value
+  self.value = new_value
+  self[1] = self:createValueWidget()
+  -- our dimensions are cached? i mean what the actual fuck
+  self.dimen = nil
+  UIManager:setDirty(self.show_parent, "ui")
+
+  if self.on_value_changed_callback(new_value) == false then
+    self.value = old
+    self[1] = self:createValueWidget()
+    self.dimen = nil
+    UIManager:setDirty(self.show_parent, "ui")
+  end
+end
+
+return SettingItemValue

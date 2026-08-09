@@ -1,0 +1,5 @@
+# Rust binaries are built per device family and fetched from the upstream
+# RakuYomi release by dev/fetch-manga-binaries.sh — never commit them.
+server
+cbz_metadata_reader
+sources/*.aix

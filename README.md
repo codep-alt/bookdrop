@@ -1,61 +1,43 @@
-# Bookdrop for KOReader
+# Bookdrop
 
-Bookdrop turns KOReader into an e-ink-friendly, cover-first browser for public
-ebook libraries. It combines maintained OPDS feeds with Internet Archive's
-public search and metadata APIs in a single native Lua interface.
+All-in-one reading for KOReader — search and download from public libraries, Z-Library, and manga sources without leaving the app.
 
 ## Install
 
-1. Extract `bookdrop.koplugin` into KOReader's `plugins` directory.
-2. Restart KOReader.
-3. From KOReader's file manager menu, open **Bookdrop**.
+Copy the `bookdrop.koplugin` folder into KOReader's `plugins` directory and restart KOReader.
 
-## Features
+## What's inside
 
-- Search by title, author, ISBN, or keyword.
-- Browse fiction, non-fiction, comics, and magazines.
-- Search Project Gutenberg, Standard Ebooks, textos.info, Gallica,
-  and Internet Archive from one results screen.
-- Filter by library, content type, format, and language.
-- Rank exact title and author matches globally, using curated-library priority
-  to break otherwise comparable matches before Internet Archive.
-- Sort the combined catalog by best match, title, or publication date.
-- Open a network-free Kindle-style home screen with fiction, non-fiction,
-  comics, magazines, Spanish, and French shelves. A small hand-curated catalog
-  and its real cover images are bundled with the plugin, with three titles per
-  category, so a fresh install is populated immediately; opening a category
-  runs a normal catalog search.
-- Browse cover-led result rows designed for grayscale e-ink displays.
-- Return to the twelve most recently viewed editions.
-- View title, author, source library, language, every available format, size,
-  year, subjects, description, rights, and edition metadata.
-- Choose among the compatible public formats exposed by each library and save
-  the selected file to KOReader's download directory.
-- Cache up to 80 small JPEG/PNG cover images locally. The home screen itself
-  never waits for catalog requests, and its bundled SVG covers are unaffected
-  by clearing the downloaded-cover cache.
+**Public libraries** — Project Gutenberg, Standard Ebooks, textos.info, Gallica, and Internet Archive. Search by title, author, ISBN, or keyword across all of them at once. Filter by format, language, content type, and library. Results are ranked by relevance with curated-library priority.
 
-## Notes
+**Z-Library** — Sign in with your Z-Library account to search and download directly. Disabled by default; enable it in Settings → Libraries.
 
-Each library remains an independent service. A temporarily unavailable source
-does not prevent results from the other selected libraries from loading.
-Internet Archive uses its Advanced Search and Metadata APIs; the other sources
-use their public OPDS feeds. Catalog responses are size-limited, cover responses
-are capped at 1.5 MiB, and compressed responses are disabled for predictable
-memory use on e-readers.
+**Manga** — Full manga reader powered by a bundled RakuYomi runtime. Comes with seven pre-installed sources (MangaDex, WEBTOON, MangaPill, Weeb Central, Asura Scans, Bato.to, TCB Scans). Install more from the Aidoku community catalog from inside the app.
+
+**Curated home** — A network-free browse screen with hand-picked books across fiction, non-fiction, comics, magazines, Spanish, and French shelves. Three titles per category with real cover art bundled in the plugin.
+
+## Building the manga runtime
+
+The manga tab needs a Rust server binary. Build it from [RakuYomi](https://github.com/tachibana-shin/rakuyomi) and place it at `bookdrop.koplugin/manga/server`, or run:
+
+```
+dev/fetch-manga-binaries.sh
+```
+
+Popular manga sources are bundled as `.aix` files in `bookdrop.koplugin/manga/sources/`. To refresh them after an upstream source update:
+
+```
+dev/fetch-popular-sources.sh
+```
 
 ## Tests
 
-The provider unit tests run the Lua module outside KOReader via
-[lupa](https://github.com/scoder/lupa). Set up once:
-
-    python3 -m venv .venv
-    .venv/bin/pip install lupa
-
-Run them with:
-
-    .venv/bin/python tests/test_provider.py
+```
+python3 -m venv .venv
+.venv/bin/pip install lupa
+.venv/bin/python tests/test_provider.py
+```
 
 ## License
 
-MIT.
+MIT. The bundled RakuYomi runtime is AGPL-3.0 (see `bookdrop.koplugin/LICENSE-AGPL-3.0`). The pre-installed manga sources are from the Aidoku community catalog and carry their own licenses.

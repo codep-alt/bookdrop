@@ -1,0 +1,5 @@
+untranslated.po
+updated_translated.po
+_*.po
+*.mo
+/updated.po

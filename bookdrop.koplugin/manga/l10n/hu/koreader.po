@@ -1,0 +1,1934 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: rakuyomi.koreader \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-19 06:54+0000\n"
+"PO-Revision-Date: 2025-12-26 23:18+0700\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: hu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../AvailableSourcesListing.lua:21
+msgid "Available sources"
+msgstr "Elérhető források"
+
+#: ../AvailableSourcesListing.lua:81
+msgid "Update available!"
+msgstr "Frissítés elérhető!"
+
+#: ../AvailableSourcesListing.lua:84
+msgid "Latest version installed"
+msgstr "A legújabb verzió telepítve"
+
+#: ../AvailableSourcesListing.lua:88
+msgid "Installable"
+msgstr "Telepíthető"
+
+#: ../AvailableSourcesListing.lua:94 ../InstalledSourcesListing.lua:81
+msgid "version"
+msgstr "változat"
+
+#: ../AvailableSourcesListing.lua:98 ../ChapterListing.lua:302
+#: ../ChapterListing.lua:363 ../InstalledSourcesListing.lua:83
+#: ../MangaInfoWidget.lua:458 ../Settings.lua:430
+msgid "Unknown"
+msgstr "Ismeretlen"
+
+#: ../AvailableSourcesListing.lua:145
+msgid "No available sources found."
+msgstr "Nem található elérhető forrás."
+
+#: ../AvailableSourcesListing.lua:145
+msgid "Try adding some source lists by looking at our README!"
+msgstr "Próbáljon meg néhány forráslistát hozzáadni a README oldalunkon!"
+
+#: ../AvailableSourcesListing.lua:163
+msgid "Installing source..."
+msgstr "Forrás telepítése..."
+
+#: ../BasicJobDialog.lua:75 ../BasicJobDialog.lua:244
+msgid "Cancelled!"
+msgstr "Törölve!"
+
+#: ../BasicJobDialog.lua:75 ../BasicJobDialog.lua:240
+msgid "Complete!"
+msgstr "Teljes!"
+
+#: ../BasicJobDialog.lua:78 ../BasicJobDialog.lua:188
+msgid "Waiting until cancelled…"
+msgstr "Várakozás a lemondásig…"
+
+#: ../BasicJobDialog.lua:84 ../BasicJobDialog.lua:87 ../BasicJobDialog.lua:153
+#: ../BasicJobDialog.lua:163
+msgid "Processing..."
+msgstr "Feldolgozás..."
+
+#: ../BasicJobDialog.lua:90
+msgid "An error occurred"
+msgstr "Hiba történt"
+
+#: ../BasicJobDialog.lua:91 ../BasicJobDialog.lua:248
+msgid "Unknown error"
+msgstr "Ismeretlen hiba"
+
+#: ../BasicJobDialog.lua:248
+msgid "Error"
+msgstr "Hiba"
+
+#: ../ChapterListPopup.lua:129 ../TrackingMenu.lua:42
+msgid "Chapters"
+msgstr "Fejezetek"
+
+#: ../ChapterListPopup.lua:354
+msgid "Search chapters"
+msgstr "Fejezetek keresése"
+
+#: ../ChapterListPopup.lua:359 ../ChapterListPopup.lua:389
+#: ../ChapterListing.lua:729 ../ChapterListing.lua:1262
+#: ../ChapterListing.lua:1339 ../CookieSyncView.lua:278
+#: ../CookieSyncView.lua:423 ../LibraryView.lua:791 ../LibraryView.lua:1173
+#: ../LibraryView.lua:1221 ../NotificationView.lua:162
+#: ../PlaylistDialog.lua:133 ../PlaylistDialog.lua:253 ../TrackingMenu.lua:239
+#: ../TrackingMenu.lua:374 ../widgets/SettingItemValue.lua:207
+#: ../widgets/SettingItemValue.lua:299
+msgid "Cancel"
+msgstr "Mégse"
+
+#: ../ChapterListPopup.lua:361
+msgid "Apply"
+msgstr "Alkalmazni"
+
+#: ../ChapterListPopup.lua:384
+msgid "Go to page"
+msgstr "Ugrás az oldalra"
+
+#: ../ChapterListPopup.lua:391
+msgid "Go"
+msgstr "Megy"
+
+#: ../ChapterListing.lua:59
+msgid "Chapter listing"
+msgstr "Fejezet felsorolás"
+
+#: ../ChapterListing.lua:256 ../ChapterListing.lua:1184
+msgid "Languages"
+msgstr "Nyelvek"
+
+#: ../ChapterListing.lua:349
+msgid "No chapters found"
+msgstr "Nem található fejezet"
+
+#: ../ChapterListing.lua:349
+msgid "Try swiping down to refresh the chapter list."
+msgstr "Csúsztassa lefelé az ujját a fejezetlista frissítéséhez."
+
+#: ../ChapterListing.lua:406
+msgid "Volume"
+msgstr "Kötet"
+
+#: ../ChapterListing.lua:410 ../utils/getChapterDisplayName.lua:15
+msgid "Chapter"
+msgstr "Fejezet"
+
+#: ../ChapterListing.lua:437
+msgid "Locked"
+msgstr "Bezárt"
+
+#: ../ChapterListing.lua:471 ../ChapterListing.lua:690
+msgid "Refreshing chapters..."
+msgstr "Fejezetek frissítése..."
+
+#: ../ChapterListing.lua:479 ../ChapterListing.lua:697
+#: ../ChapterListing.lua:1450
+msgid "Cancelled."
+msgstr "Törölve."
+
+#: ../ChapterListing.lua:491
+msgid "Refresh chapter error"
+msgstr "Fejezet frissítési hiba"
+
+#: ../ChapterListing.lua:541
+msgid "Chapter is locked"
+msgstr "fejezet zárolva van"
+
+#: ../ChapterListing.lua:558 ../PlaylistDialog.lua:218
+msgid "Open"
+msgstr "Nyitott"
+
+#: ../ChapterListing.lua:568 ../ChapterListing.lua:1094 ../LibraryView.lua:559
+msgid "Refresh"
+msgstr "Frissítés"
+
+#: ../ChapterListing.lua:574
+msgid "Chapter refreshed"
+msgstr "Fejezet frissítve"
+
+#: ../ChapterListing.lua:580 ../ChapterListing.lua:723
+#: ../ChapterListing.lua:1140 ../LibraryView.lua:606
+msgid "Mark unread"
+msgstr "Megjelölés olvasatlanként"
+
+#: ../ChapterListing.lua:591 ../ChapterListing.lua:1346
+msgid "Download"
+msgstr "Letöltés"
+
+#: ../ChapterListing.lua:591 ../LibraryView.lua:809 ../LibraryView.lua:829
+msgid "Remove"
+msgstr "Távolítsa el"
+
+#: ../ChapterListing.lua:600
+msgid "Chapter downloaded"
+msgstr "Fejezet letöltve"
+
+#: ../ChapterListing.lua:619
+msgid "Revoke chapter..."
+msgstr "Fejezet visszavonása..."
+
+#: ../ChapterListing.lua:637
+msgid "Removed chapter"
+msgstr "Fejezet eltávolítva"
+
+#: ../ChapterListing.lua:648
+msgid "Marking"
+msgstr "Jelzés"
+
+#: ../ChapterListing.lua:648
+msgid "Un-marking"
+msgstr "Jelölés megszüntetése"
+
+#: ../ChapterListing.lua:648
+msgid "chapter..."
+msgstr "fejezet..."
+
+#: ../ChapterListing.lua:682
+msgid "Cannot refresh chapters while offline"
+msgstr "Offline állapotban nem lehet fejezeteket frissíteni"
+
+#: ../ChapterListing.lua:723 ../ChapterListing.lua:1130 ../LibraryView.lua:595
+msgid "Mark read"
+msgstr "Mark olvasott"
+
+#: ../ChapterListing.lua:724
+msgid "1 - 10.5, 20 - 100"
+msgstr "1-10,5, 20-100"
+
+#: ../ChapterListing.lua:725
+msgid "Leaving blank will select all"
+msgstr "Ha üresen hagyja, az összeset kijelöli"
+
+#: ../ChapterListing.lua:725
+msgid "Mark chapters as read or unread"
+msgstr "Fejezetek megjelölése olvasottként vagy olvasatlanként"
+
+#: ../ChapterListing.lua:736
+msgid "Mark"
+msgstr "Mark"
+
+#: ../ChapterListing.lua:746
+msgid "Marking..."
+msgstr "Jelzés..."
+
+#: ../ChapterListing.lua:756
+msgid "Marked"
+msgstr "Megjelölt"
+
+#: ../ChapterListing.lua:775 ../MangaSearchResults.lua:181
+msgid "No errors"
+msgstr "Nincsenek hibák"
+
+#: ../ChapterListing.lua:784
+#, lua-format
+msgid "Page"
+msgstr "oldal"
+
+#: ../ChapterListing.lua:784
+#, lua-format
+msgid "attempts"
+msgstr "próbálkozások"
+
+#: ../ChapterListing.lua:792 ../MangaSearchResults.lua:197
+#, lua-format
+msgid "… and %d more errors"
+msgstr "… és további %d hiba"
+
+#: ../ChapterListing.lua:814
+msgid "Could not download chapter."
+msgstr "Nem sikerült letölteni a fejezetet."
+
+#: ../ChapterListing.lua:822
+msgid "Loading chapter..."
+msgstr "Fejezet betöltése..."
+
+#: ../ChapterListing.lua:823
+msgid "unknown"
+msgstr "ismeretlen"
+
+#: ../ChapterListing.lua:841
+msgid "Download cancelled."
+msgstr "Letöltés megszakítva."
+
+#: ../ChapterListing.lua:847
+msgid "Are you sure you want to cancel the download?"
+msgstr "Biztosan megszakítja a letöltést?"
+
+#: ../ChapterListing.lua:1084 ../MangaSearchResults.lua:361
+msgid "Add to Library"
+msgstr "Hozzáadás a könyvtárhoz"
+
+#: ../ChapterListing.lua:1102 ../LibraryView.lua:579
+#: ../MangaSearchResults.lua:433
+msgid "Details"
+msgstr "Részletek"
+
+#: ../ChapterListing.lua:1120 ../LibraryView.lua:628 ../LibraryView.lua:924
+#: ../TrackingSettings.lua:416
+msgid "Tracking"
+msgstr "Követés"
+
+#: ../ChapterListing.lua:1152
+msgid "Resume"
+msgstr "Folytatás"
+
+#: ../ChapterListing.lua:1160
+msgid "Next Chapter"
+msgstr "Következő fejezet"
+
+#: ../ChapterListing.lua:1170
+msgid "Download unread chapters…"
+msgstr "Olvasatlan fejezetek letöltése…"
+
+#: ../ChapterListing.lua:1197
+msgid "Group"
+msgstr "Csoport"
+
+#: ../ChapterListing.lua:1198 ../ChapterListing.lua:1320
+msgid "Filter by Group"
+msgstr "Szűrés csoport szerint"
+
+#: ../ChapterListing.lua:1227
+msgid "Adding to library..."
+msgstr "Hozzáadás a könyvtárhoz..."
+
+#: ../ChapterListing.lua:1234
+msgid "Failed to add to library"
+msgstr "Nem sikerült hozzáadni a könyvtárhoz"
+
+#: ../ChapterListing.lua:1239
+msgid "Added to library."
+msgstr "Hozzáadva a könyvtárhoz."
+
+#: ../ChapterListing.lua:1251 ../LibraryView.lua:753
+msgid "Sadly, no next chapter available! :c"
+msgstr "Sajnos a következő fejezet nem érhető el! "
+
+#: ../ChapterListing.lua:1260
+msgid "Next"
+msgstr "Következő"
+
+#: ../ChapterListing.lua:1260
+msgid "reading with"
+msgstr "-val olvasni"
+
+#: ../ChapterListing.lua:1261 ../LibraryView.lua:790
+msgid "Read"
+msgstr "Olvas"
+
+#: ../ChapterListing.lua:1283
+msgid "Show All"
+msgstr "Összes megjelenítése"
+
+#: ../ChapterListing.lua:1292
+msgid "Showing all groups"
+msgstr "Az összes csoport megjelenítése"
+
+#: ../ChapterListing.lua:1313
+msgid "Filtered to"
+msgstr "Szűrve erre:"
+
+#: ../ChapterListing.lua:1330
+msgid "Download unread chapters..."
+msgstr "Olvasatlan fejezetek letöltése..."
+
+#: ../ChapterListing.lua:1332
+msgid "Amount of unread chapters (default: all)"
+msgstr "Olvasatlan fejezetek száma (alapértelmezett: összes)"
+
+#: ../ChapterListing.lua:1334
+msgid "Specify amount or leave empty for all."
+msgstr "Adja meg az összeget, vagy hagyja üresen az összeset."
+
+#: ../ChapterListing.lua:1334
+msgid "Will download from"
+msgstr "Letölthető innen"
+
+#: ../ChapterListing.lua:1335
+msgid "Specify the amount of unread chapters to download"
+msgstr "Adja meg a letöltendő olvasatlan fejezetek számát"
+
+#: ../ChapterListing.lua:1335
+msgid "or leave empty to download all of them."
+msgstr "vagy hagyja üresen az összes letöltéséhez."
+
+#: ../ChapterListing.lua:1356
+msgid "Invalid amount of chapters!"
+msgstr "Érvénytelen számú fejezet!"
+
+#: ../ChapterListing.lua:1377
+msgid "No unread chapters found for"
+msgstr "Nem található olvasatlan fejezet ehhez:"
+
+#: ../ChapterListing.lua:1402 ../ChapterListing.lua:1477
+msgid "Downloading all chapters, this will take a while…"
+msgstr "Az összes fejezet letöltése eltart egy ideig…"
+
+#: ../ChapterListing.lua:1487
+msgid "Waiting for download to be cancelled…"
+msgstr "Várakozás a letöltés megszakítására…"
+
+#: ../ChapterListing.lua:1489
+msgid "Downloading all chapters, this will take a while… ("
+msgstr "Az összes fejezet letöltése eltart egy ideig… ("
+
+#: ../ChapterListing.lua:1492
+msgid "Tap outside this message to cancel."
+msgstr "A visszavonáshoz koppintson az üzeneten kívülre."
+
+#: ../CookieSyncView.lua:58 ../LibraryView.lua:1025
+msgid "Cookie Sync"
+msgstr "Cookie Sync"
+
+#: ../CookieSyncView.lua:164
+msgid "Unable to fetch cookie sync status."
+msgstr "Nem sikerült lekérni a cookie-szinkronizálás állapotát."
+
+#: ../CookieSyncView.lua:183
+msgid "Device paired as: "
+msgstr "Az eszköz párosítva:"
+
+#: ../CookieSyncView.lua:185
+msgid "Chat ID: "
+msgstr "Csevegés azonosítója:"
+
+#: ../CookieSyncView.lua:187
+msgid "Cached domains: "
+msgstr "Gyorsítótárazott domainek:"
+
+#: ../CookieSyncView.lua:190
+msgid "Not paired. Use 'Pair Device' to link this device to your Telegram bot."
+msgstr "Nincs párosítva. "
+
+#: ../CookieSyncView.lua:214
+msgid "Sync Cookies Now"
+msgstr "Cookie-k szinkronizálása most"
+
+#: ../CookieSyncView.lua:225
+msgid "View Cached Cookies"
+msgstr "A gyorsítótárazott cookie-k megtekintése"
+
+#: ../CookieSyncView.lua:236
+msgid "Unpair Device"
+msgstr "Eszköz párosításának megszüntetése"
+
+#: ../CookieSyncView.lua:255
+msgid "Pair Device"
+msgstr "Eszköz párosítása"
+
+#: ../CookieSyncView.lua:270
+msgid "Enter Telegram Bot Server URL"
+msgstr "Írja be a Telegram Bot Server URL-címét"
+
+#: ../CookieSyncView.lua:271
+msgid "Enter the URL of your Telegram Bot server. You will get a pairing code to send to the bot."
+msgstr ""
+
+#: ../CookieSyncView.lua:274
+msgid "https://your-bot.deno.dev"
+msgstr "https://your-bot.deno.dev"
+
+#: ../CookieSyncView.lua:284
+msgid "Generate Code"
+msgstr "Kód generálása"
+
+#: ../CookieSyncView.lua:305
+msgid "Generating pairing code..."
+msgstr "Párosítási kód generálása..."
+
+#: ../CookieSyncView.lua:317
+msgid "Failed to generate pairing code: "
+msgstr "Nem sikerült létrehozni a párosítási kódot:"
+
+#: ../CookieSyncView.lua:325
+msgid "Pairing Code: "
+msgstr "Párosítási kód:"
+
+#: ../CookieSyncView.lua:326
+msgid "1. Open Telegram on your Android phone"
+msgstr "1. Nyissa meg a Telegram alkalmazást Android telefonján"
+
+#: ../CookieSyncView.lua:327
+msgid "2. Send this command to the bot:"
+msgstr "2. Küldje el ezt a parancsot a botnak:"
+
+#: ../CookieSyncView.lua:328
+msgid "DEVICE_NAME"
+msgstr "DEVICE_NAME"
+
+#: ../CookieSyncView.lua:329
+msgid "(Replace DEVICE_NAME with a name for this device, e.g. kindle_bedroom)"
+msgstr "(Cserélje le a DEVICE_NAME eszközt az eszköz nevére, pl. kindle_bedroom)"
+
+#: ../CookieSyncView.lua:330
+msgid "3. Come back here and tap 'Check Pairing'"
+msgstr "3. Térjen vissza ide, és érintse meg a „Párosítás ellenőrzése” lehetőséget."
+
+#: ../CookieSyncView.lua:334
+msgid "Check Pairing"
+msgstr "Ellenőrizze a Párosítást"
+
+#: ../CookieSyncView.lua:338 ../CookieSyncView.lua:375
+#: ../OfflineAlertDialog.lua:54
+msgid "Close"
+msgstr "Közeli"
+
+#: ../CookieSyncView.lua:344
+msgid "Checking pairing status..."
+msgstr "A párosítás állapotának ellenőrzése..."
+
+#: ../CookieSyncView.lua:356
+msgid "Failed to check pairing: "
+msgstr "Nem sikerült ellenőrizni a párosítást:"
+
+#: ../CookieSyncView.lua:363
+msgid "Device paired successfully as: "
+msgstr "Az eszköz sikeresen párosítva:"
+
+#: ../CookieSyncView.lua:368
+msgid "Not paired yet. Make sure you sent the /link command to the Telegram bot. Try again?"
+msgstr ""
+
+#: ../CookieSyncView.lua:371
+msgid "Check Again"
+msgstr "Ellenőrizze újra"
+
+#: ../CookieSyncView.lua:382 ../LibraryView.lua:1040
+msgid "Syncing cookies..."
+msgstr "Cookie-k szinkronizálása..."
+
+#: ../CookieSyncView.lua:394 ../LibraryView.lua:1049
+msgid "Failed to sync cookies: "
+msgstr "A cookie-k szinkronizálása nem sikerült:"
+
+#: ../CookieSyncView.lua:401 ../LibraryView.lua:1055
+msgid " domain(s)."
+msgstr "domain(ek)."
+
+#: ../CookieSyncView.lua:401 ../LibraryView.lua:1055
+msgid "Synced cookies for "
+msgstr "Szinkronizált cookie-k a következőhöz:"
+
+#: ../CookieSyncView.lua:408
+msgid "Unpair this device? This will clear all synced cookies."
+msgstr "Megszünteti az eszköz párosítását? "
+
+#: ../CookieSyncView.lua:409
+msgid "Unpair"
+msgstr "Párosítás megszüntetése"
+
+#: ../CookieSyncView.lua:414
+msgid "Failed to unpair: "
+msgstr "Nem sikerült a párosítás megszüntetése:"
+
+#: ../CookieSyncView.lua:419
+msgid "Device unpaired."
+msgstr "Az eszköz párosítása megszakadt."
+
+#: ../CookieSyncView.lua:432
+msgid "Failed to list cookies: "
+msgstr "A cookie-k listázása nem sikerült:"
+
+#: ../CookieSyncView.lua:445
+msgid "No cookies cached."
+msgstr "Nincsenek cookie-k a gyorsítótárban."
+
+#: ../DownloadUnreadChaptersJobDialog.lua:6
+msgid "Downloading chapters, this will take a while…"
+msgstr "Fejezetek letöltése, ez eltart egy ideig…"
+
+#: ../DownloadUnreadChaptersJobDialog.lua:7
+msgid "Download complete!"
+msgstr "Letöltés kész!"
+
+#: ../DownloadUnreadChaptersJobDialog.lua:8
+msgid "An error occurred while downloading chapters"
+msgstr "Hiba történt a fejezetek letöltése közben"
+
+#: ../DownloadUnreadChaptersJobDialog.lua:23
+msgid "Download cancelled!"
+msgstr "Letöltés megszakítva!"
+
+#: ../ErrorDialog.lua:15
+msgid "Retry"
+msgstr "Próbálja újra"
+
+#: ../InstalledSourcesListing.lua:21
+msgid "Installed sources"
+msgstr "Telepített források"
+
+#: ../InstalledSourcesListing.lua:95
+msgid "No installed sources found"
+msgstr "Nem található telepített forrás"
+
+#: ../InstalledSourcesListing.lua:95
+msgid "Try installing some by tapping"
+msgstr "Próbáljon meg néhányat koppintással telepíteni"
+
+#: ../InstalledSourcesListing.lua:96
+msgid "the top-left button to list the available sources."
+msgstr "a bal felső gombot az elérhető források listájához."
+
+#: ../InstalledSourcesListing.lua:123
+msgid "Do you want to remove the"
+msgstr "Szeretné eltávolítani a"
+
+#: ../InstalledSourcesListing.lua:123
+msgid "source?"
+msgstr "forrás?"
+
+#: ../LibraryView.lua:76 ../Settings.lua:85
+msgid "Library"
+msgstr "Könyvtár"
+
+#: ../LibraryView.lua:462
+msgid "No mangas found in library"
+msgstr "Nem található manga a könyvtárban"
+
+#: ../LibraryView.lua:462
+msgid "Try adding some by holding their name on the search results!"
+msgstr "Próbáljon meg néhányat hozzáadni úgy, hogy a nevüket a keresési eredmények között tartja!"
+
+#: ../LibraryView.lua:570
+msgid "Refreshed manga"
+msgstr "Frissített manga"
+
+#: ../LibraryView.lua:619
+msgid "Continue Reading"
+msgstr "Olvasás folytatása"
+
+#: ../LibraryView.lua:637 ../MangaSearchResults.lua:424
+msgid "Add to Playlist"
+msgstr "Hozzáadás a lejátszási listához"
+
+#: ../LibraryView.lua:649
+msgid "List chapters"
+msgstr "Fejezetek listázása"
+
+#: ../LibraryView.lua:667 ../MangaSearchResults.lua:358
+msgid "Remove from Library"
+msgstr "Eltávolítás a könyvtárból"
+
+#: ../LibraryView.lua:677
+msgid "Remove from Playlist"
+msgstr "Eltávolítás a lejátszási listáról"
+
+#: ../LibraryView.lua:709
+msgid "Finding next chapter..."
+msgstr "A következő fejezet keresése..."
+
+#: ../LibraryView.lua:720
+msgid "No chapters found for this manga."
+msgstr "Nem található fejezet ehhez a mangához."
+
+#: ../LibraryView.lua:789
+msgid "Resume reading with:"
+msgstr "Folytassa az olvasást ezzel:"
+
+#: ../LibraryView.lua:808 ../LibraryView.lua:828
+msgid "Do you want to remove"
+msgstr "Szeretné eltávolítani"
+
+#: ../LibraryView.lua:808
+msgid "from your library?"
+msgstr "a könyvtáradból?"
+
+#: ../LibraryView.lua:828
+msgid "from your playlist?"
+msgstr "a lejátszási listádról?"
+
+#: ../LibraryView.lua:851
+msgid "Search for mangas"
+msgstr "Keress mangákat"
+
+#: ../LibraryView.lua:861
+msgid "Search favorites"
+msgstr "Kedvencek keresése"
+
+#: ../LibraryView.lua:871 ../PlaylistDialog.lua:304
+msgid "Playlists"
+msgstr "Lejátszási listák"
+
+#: ../LibraryView.lua:880
+msgid "Refresh mangas"
+msgstr "Frissítse a mangákat"
+
+#: ../LibraryView.lua:888
+msgid "Refresh details"
+msgstr "Frissítse a részleteket"
+
+#: ../LibraryView.lua:898
+msgid "Cleaner chapters"
+msgstr "Tisztább fejezetek"
+
+#: ../LibraryView.lua:906
+msgid "Manage sources"
+msgstr "Források kezelése"
+
+#: ../LibraryView.lua:916 ../LibraryView.lua:1167 ../Settings.lua:634
+msgid "Settings"
+msgstr "Beállítások elemre"
+
+#: ../LibraryView.lua:933
+msgid "Sync Database (Beta)"
+msgstr "Adatbázis szinkronizálása (béta)"
+
+#: ../LibraryView.lua:937
+msgid "Sync to WebDAV..."
+msgstr "Szinkronizálás a WebDAV-val..."
+
+#: ../LibraryView.lua:949
+msgid "Do you want to migrate your local database from the server?"
+msgstr "Szeretné áttelepíteni a helyi adatbázist a szerverről?"
+
+#: ../LibraryView.lua:949
+msgid "The remote database is newer than the local one."
+msgstr "A távoli adatbázis újabb, mint a helyi."
+
+#: ../LibraryView.lua:949
+msgid "This action cannot be undone."
+msgstr "Ez a művelet nem vonható vissza."
+
+#: ../LibraryView.lua:950
+msgid "Migrate"
+msgstr "Vándorol"
+
+#: ../LibraryView.lua:954
+msgid "Migrating database..."
+msgstr "Adatbázis áttelepítése..."
+
+#: ../LibraryView.lua:965 ../LibraryView.lua:1012
+msgid "Local database has been migrated from the server!"
+msgstr "A helyi adatbázis áttelepült a szerverről!"
+
+#: ../LibraryView.lua:976
+msgid "Replace Cloud"
+msgstr "Cserélje ki a felhőt"
+
+#: ../LibraryView.lua:980
+msgid "Replacing cloud..."
+msgstr "Felhő cseréje..."
+
+#: ../LibraryView.lua:990
+msgid "Cloud database has been forcedly replaced with local one!"
+msgstr "A felhő adatbázist kényszerűen lecserélték helyire!"
+
+#: ../LibraryView.lua:1008
+msgid "Database is already up to date!"
+msgstr "Az adatbázis már naprakész!"
+
+#: ../LibraryView.lua:1010
+msgid "Database has been synced to the server!"
+msgstr "Az adatbázis szinkronizálva a szerverrel!"
+
+#: ../LibraryView.lua:1014
+msgid "Sync completed!"
+msgstr "A szinkronizálás befejeződött!"
+
+#: ../LibraryView.lua:1032
+msgid "Sync Cookies"
+msgstr "Cookie-k szinkronizálása"
+
+#: ../LibraryView.lua:1062
+msgid "System resources"
+msgstr "Rendszer erőforrások"
+
+#: ../LibraryView.lua:1077
+msgid "CPU"
+msgstr "CPU"
+
+#: ../LibraryView.lua:1078
+msgid "Cores"
+msgstr "Magok"
+
+#: ../LibraryView.lua:1079
+msgid "Usage"
+msgstr "Használat"
+
+#: ../LibraryView.lua:1080
+msgid "Memory"
+msgstr "Memória"
+
+#: ../LibraryView.lua:1083 ../Settings.lua:376
+msgid "Storage"
+msgstr "Tárolás"
+
+#: ../LibraryView.lua:1087 ../LibraryView.lua:1091
+msgid "Tmpfs"
+msgstr "Tmpfs"
+
+#: ../LibraryView.lua:1091
+msgid "unavailable"
+msgstr "nem elérhető"
+
+#: ../LibraryView.lua:1094
+msgid "Process RSS"
+msgstr "RSS feldolgozása"
+
+#: ../LibraryView.lua:1095
+msgid "Virtual"
+msgstr "Virtuális"
+
+#: ../LibraryView.lua:1104
+msgid "Check for updates"
+msgstr "Ellenőrizze a frissítéseket"
+
+#: ../LibraryView.lua:1139
+msgid "Manga search..."
+msgstr "Manga keresés..."
+
+#: ../LibraryView.lua:1140
+msgid "Houseki no Kuni"
+msgstr "Houseki no Kuni"
+
+#: ../LibraryView.lua:1141 ../LibraryView.lua:1217
+msgid "Type the manga name to search for"
+msgstr "Írja be a keresendő manga nevét"
+
+#: ../LibraryView.lua:1145 ../LibraryView.lua:1154 ../LibraryView.lua:1199
+#: ../LibraryView.lua:1228 ../Settings.lua:194 ../TrackingMenu.lua:246
+msgid "Search"
+msgstr "Keresés"
+
+#: ../LibraryView.lua:1199
+msgid "Exclude source search for"
+msgstr "Forráskeresés kizárása"
+
+#: ../LibraryView.lua:1214
+msgid "Favorite search..."
+msgstr "Kedvenc kereső..."
+
+#: ../LibraryView.lua:1216
+msgid "Tonikaku Kawaii"
+msgstr "Tonikaku Kawaii"
+
+#: ../LibraryView.lua:1268
+msgid "Scaning files..."
+msgstr "Fájlok vizsgálata..."
+
+#: ../LibraryView.lua:1283
+#, lua-format
+msgid "Found %d files."
+msgstr "%d fájl található."
+
+#: ../LibraryView.lua:1284
+#, lua-format
+msgid "Total size %s."
+msgstr "Teljes méret %s."
+
+#: ../LibraryView.lua:1285
+#, lua-format
+msgid "RendOnly file .cbz and .epub scan."
+msgstr "RendOnly fájl .cbz és .epub vizsgálat."
+
+#: ../LibraryView.lua:1289
+msgid "Clean"
+msgstr "Tiszta"
+
+#: ../LibraryView.lua:1294
+msgid "Deleting..."
+msgstr "Törlés..."
+
+#: ../LibraryView.lua:1312
+#, lua-format
+msgid "Cleaned free %s storage"
+msgstr "Szabad %s tárhely megtisztítva"
+
+#: ../LibraryView.lua:1327 ../LibraryView.lua:1339 ../LibraryView.lua:1360
+msgid "Cannot refresh while offline"
+msgstr "Offline állapotban nem lehet frissíteni"
+
+#: ../LibraryView.lua:1349
+msgid "Refresh mangas..."
+msgstr "Frissítsd a mangákat..."
+
+#: ../LibraryView.lua:1350
+msgid "All chapters manga updated!"
+msgstr "Minden fejezet manga frissítve!"
+
+#: ../LibraryView.lua:1351
+msgid "Some manga updates fail:"
+msgstr "Néhány manga frissítés sikertelen:"
+
+#: ../LibraryView.lua:1370
+msgid "Refresh manga details..."
+msgstr "A manga részleteinek frissítése..."
+
+#: ../LibraryView.lua:1371
+msgid "All manga details refresh!"
+msgstr "Minden manga részlet frissül!"
+
+#: ../LibraryView.lua:1372
+msgid "Some manga details refresh fail:"
+msgstr "Néhány manga részlet frissítése sikertelen:"
+
+#: ../LibraryView.lua:1388
+msgid "Progress"
+msgstr "Előrehalad"
+
+#: ../LibraryView.lua:1406
+msgid "Cleaner"
+msgstr "Tisztító"
+
+#: ../LibraryView.lua:1407
+msgid "Find and delete invalid files including files from deleted sources"
+msgstr "Keresse meg és törölje az érvénytelen fájlokat, beleértve a törölt forrásokból származó fájlokat is"
+
+#: ../LibraryView.lua:1407 ../LibraryView.lua:1410
+msgid "Normal"
+msgstr "Normál"
+
+#: ../LibraryView.lua:1408 ../LibraryView.lua:1416
+msgid "Chapter read done"
+msgstr "A fejezet elolvasása kész"
+
+#: ../LibraryView.lua:1408
+msgid "Find and delete chapters that have been read"
+msgstr "Keresse meg és törölje az elolvasott fejezeteket"
+
+#: ../LibraryView.lua:1409
+msgid "IMPORTANT: Meta files (bookmark, history) not keep!"
+msgstr "FONTOS: A metafájlok (könyvjelzők, előzmények) nem maradnak meg!"
+
+#: ../MangaInfoWidget.lua:145
+msgid "Statistics"
+msgstr "Statisztika"
+
+#: ../MangaInfoWidget.lua:147 ../MangaInfoWidget.lua:490
+#: ../MangaInfoWidget.lua:516
+msgid "Description"
+msgstr "Leírás"
+
+#: ../MangaInfoWidget.lua:280
+msgid "%1 % Completed"
+msgstr "%1% kész"
+
+#: ../MangaInfoWidget.lua:311 ../MangaInfoWidget.lua:405
+msgid "N/A"
+msgstr "N/A"
+
+#: ../MangaInfoWidget.lua:313
+msgid "Last read: %1"
+msgstr "Utoljára olvasva: %1"
+
+#: ../MangaInfoWidget.lua:385
+msgid "Status"
+msgstr "Állapot"
+
+#: ../MangaInfoWidget.lua:392 ../MangaInfoWidget.lua:468
+msgid "NSFW"
+msgstr "NSFW"
+
+#: ../MangaInfoWidget.lua:399
+msgid "Last Updated"
+msgstr "Utoljára frissítve"
+
+#: ../MangaInfoWidget.lua:448
+msgid "Ongoing"
+msgstr "Folyamatban"
+
+#: ../MangaInfoWidget.lua:450
+msgid "Completed"
+msgstr "Befejezve"
+
+#: ../MangaInfoWidget.lua:452
+msgid "Cancelled"
+msgstr "Törölve"
+
+#: ../MangaInfoWidget.lua:454
+msgid "Hiatus"
+msgstr "Kihagyás"
+
+#: ../MangaInfoWidget.lua:456
+msgid "Not published"
+msgstr "Nem tették közzé"
+
+#: ../MangaInfoWidget.lua:464
+msgid "Safe"
+msgstr "Biztonságos"
+
+#: ../MangaInfoWidget.lua:466
+msgid "Suggestive"
+msgstr "Szuggesztív"
+
+#: ../MangaInfoWidget.lua:572 ../MangaSearchResults.lua:388
+msgid "Refreshing details..."
+msgstr "Frissítő részletek..."
+
+#: ../MangaInfoWidget.lua:584 ../MangaSearchResults.lua:394
+msgid "Refresh details cancelled."
+msgstr "A részletek frissítése megszakítva."
+
+#: ../MangaReader.lua:178
+msgid "Go back to Rakuyomi..."
+msgstr "Menj vissza Rakuyomihoz..."
+
+#: ../MangaReader.lua:274
+msgid "Do you want Rakuyomi to commandeer this button when you open it?"
+msgstr "Azt akarod, hogy Rakuyomi vezesse ezt a gombot, amikor kinyitod?"
+
+#: ../MangaReader.lua:274
+msgid "This setting only affects when you open it with Rakuyomi."
+msgstr "Ez a beállítás csak akkor van hatással, ha a Rakuyomival nyitja meg."
+
+#: ../MangaReader.lua:276
+msgid "Yes"
+msgstr "Igen"
+
+#: ../MangaReader.lua:277
+msgid "No"
+msgstr "Nem"
+
+#: ../MangaReader.lua:332
+msgid "View Mode"
+msgstr "Nézet mód"
+
+#: ../MangaReader.lua:333 ../MangaReader.lua:358 ../Settings.lua:292
+msgid "Default"
+msgstr "Alapértelmezett"
+
+#: ../MangaReader.lua:333 ../MangaReader.lua:360 ../Settings.lua:294
+msgid "LTR"
+msgstr "LTR"
+
+#: ../MangaReader.lua:333 ../MangaReader.lua:359 ../Settings.lua:293
+msgid "RTL"
+msgstr "RTL"
+
+#: ../MangaReader.lua:333 ../MangaReader.lua:362 ../Settings.lua:296
+msgid "Scroll"
+msgstr "Görgetés"
+
+#: ../MangaReader.lua:333 ../MangaReader.lua:361 ../Settings.lua:295
+msgid "Vertical"
+msgstr "Függőleges"
+
+#: ../MangaReader.lua:337
+msgid ""
+"Choose how pages are displayed and navigated.\n"
+"Options: Default (follow source), RTL (right-to-left for Japanese manga), LTR (left-to-right for Western comics), Vertical (long-strip webtoons), and Scroll (continuous scroll)."
+msgstr ""
+
+#: ../MangaReader.lua:347 ../Settings.lua:291 ../Settings.lua:326
+msgid "Off"
+msgstr "Le"
+
+#: ../MangaReader.lua:378
+msgid "Global Viewer Override"
+msgstr "Global Viewer Override"
+
+#: ../MangaReader.lua:571
+msgid "Set default %1 to %2?"
+msgstr "Az alapértelmezett %1 beállítása %2-re?"
+
+#: ../MangaReader.lua:575
+msgid "Set as default"
+msgstr "Beállítás alapértelmezettként"
+
+#: ../MangaSearchResults.lua:30
+msgid "Search results..."
+msgstr "Keresési eredmények..."
+
+#: ../MangaSearchResults.lua:158
+msgid "Next page"
+msgstr "Következő oldal"
+
+#: ../MangaSearchResults.lua:210 ../MangaSearchResults.lua:270
+msgid "Searching for"
+msgstr "Keresi"
+
+#: ../MangaSearchResults.lua:215 ../MangaSearchResults.lua:276
+msgid "Search cancelled."
+msgstr "Keresés megszakítva."
+
+#: ../NotificationView.lua:37
+msgid "Notification"
+msgstr "Bejelentés"
+
+#: ../NotificationView.lua:57
+msgid "Cleared all notifications!"
+msgstr "Minden értesítés törölve!"
+
+#: ../NotificationView.lua:104
+msgid "No notification"
+msgstr "Nincs értesítés"
+
+#: ../NotificationView.lua:160
+msgid "Delete this notification?"
+msgstr "Törli ezt az értesítést?"
+
+#: ../NotificationView.lua:161 ../PlaylistDialog.lua:157
+#: ../PlaylistDialog.lua:230
+msgid "Delete"
+msgstr "Töröl"
+
+#: ../OAuthFlowView.lua:65
+msgid "Sign in with "
+msgstr "Jelentkezzen be a következővel:"
+
+#: ../OAuthFlowView.lua:79
+msgid "Scan this QR code on your phone to sign in."
+msgstr "A bejelentkezéshez olvassa be ezt a QR-kódot a telefonján."
+
+#: ../OAuthFlowView.lua:104
+msgid "Error: No bridge URL available."
+msgstr "Hiba: Nem érhető el a híd URL-je."
+
+#: ../OAuthFlowView.lua:114
+msgid "Scan the QR code, then check sign-in status."
+msgstr "Olvassa be a QR-kódot, majd ellenőrizze a bejelentkezés állapotát."
+
+#: ../OAuthFlowView.lua:125
+msgid "Check sign-in status"
+msgstr "Ellenőrizze a bejelentkezés állapotát"
+
+#: ../OAuthFlowView.lua:209
+msgid "Checking..."
+msgstr "Ellenőrzés..."
+
+#: ../OAuthFlowView.lua:215
+msgid "Network error. Please try again."
+msgstr "Hálózati hiba. "
+
+#: ../OAuthFlowView.lua:222
+msgid "Waiting for sign-in. Scan the QR code, then tap Check."
+msgstr "Várakozás a bejelentkezésre. "
+
+#: ../OAuthFlowView.lua:225
+msgid "Sign-in successful!"
+msgstr "Sikeres bejelentkezés!"
+
+#: ../OAuthFlowView.lua:231
+msgid "Error: "
+msgstr "Hiba:"
+
+#: ../OAuthFlowView.lua:289
+msgid "Creating sign-in session..."
+msgstr "Bejelentkezési munkamenet létrehozása..."
+
+#: ../OAuthFlowView.lua:301
+msgid "Failed to start sign-in: "
+msgstr "Nem sikerült elindítani a bejelentkezést:"
+
+#: ../OfflineAlertDialog.lua:44
+msgid "Some features may be limited"
+msgstr "Egyes funkciók korlátozottak lehetnek"
+
+#: ../OfflineAlertDialog.lua:44
+msgid "You appear to be offline"
+msgstr "Úgy tűnik, offline vagy"
+
+#: ../OfflineAlertDialog.lua:45
+msgid "• You can still read any downloaded manga chapters"
+msgstr "• Továbbra is elolvashatja a letöltött manga fejezeteket"
+
+#: ../OfflineAlertDialog.lua:46
+msgid "• Your library content will be available"
+msgstr "• A könyvtár tartalma elérhető lesz"
+
+#: ../OfflineAlertDialog.lua:47
+msgid "• New content and updates require a connection"
+msgstr "• Az új tartalmakhoz és frissítésekhez kapcsolat szükséges"
+
+#: ../OfflineAlertDialog.lua:64
+msgid "Do not show this message again"
+msgstr "Ne jelenítse meg újra ezt az üzenetet"
+
+#: ../PlaylistDialog.lua:129
+msgid "Rename Playlist"
+msgstr "Lejátszási lista átnevezése"
+
+#: ../PlaylistDialog.lua:134 ../TrackingMenu.lua:381
+#: ../widgets/SettingItemValue.lua:306
+msgid "Save"
+msgstr "Megtakarítás"
+
+#: ../PlaylistDialog.lua:156
+msgid "Delete playlist"
+msgstr "Lejátszási lista törlése"
+
+#: ../PlaylistDialog.lua:225
+msgid "Rename"
+msgstr "Átnevezés"
+
+#: ../PlaylistDialog.lua:248 ../PlaylistDialog.lua:310
+msgid "New Playlist"
+msgstr "Új lejátszási lista"
+
+#: ../PlaylistDialog.lua:249
+msgid "Playlist name"
+msgstr "Lejátszási lista neve"
+
+#: ../PlaylistDialog.lua:262
+msgid "Create"
+msgstr "Teremt"
+
+#: ../PlaylistDialog.lua:322
+msgid "No playlists yet."
+msgstr "Még nincsenek lejátszási listák."
+
+#: ../Settings.lua:91
+msgid "Library view mode"
+msgstr "Könyvtárnézet mód"
+
+#: ../Settings.lua:93 ../Settings.lua:202
+msgid "Base"
+msgstr "Bázis"
+
+#: ../Settings.lua:94 ../Settings.lua:203
+msgid "Cover"
+msgstr "Borító"
+
+#: ../Settings.lua:95 ../Settings.lua:204
+msgid "Grid"
+msgstr "Rács"
+
+#: ../Settings.lua:104
+msgid "Library sorting mode"
+msgstr "Könyvtári rendezési mód"
+
+#: ../Settings.lua:106
+msgid "Date added (oldest)"
+msgstr ""
+
+#: ../Settings.lua:107
+msgid "Date added (newest)"
+msgstr ""
+
+#: ../Settings.lua:108
+msgid "Title (A-Z)"
+msgstr ""
+
+#: ../Settings.lua:109
+msgid "Title (Z-A)"
+msgstr ""
+
+#: ../Settings.lua:110
+msgid "Unread (fewest)"
+msgstr ""
+
+#: ../Settings.lua:111
+msgid "Unread (most)"
+msgstr ""
+
+#: ../Settings.lua:112
+#, fuzzy
+msgid "Last read (oldest)"
+msgstr "Utolsó olvasás csökkenő sorrendben"
+
+#: ../Settings.lua:113
+#, fuzzy
+msgid "Last read (newest)"
+msgstr "Utoljára olvasva: %1"
+
+#: ../Settings.lua:114
+msgid "Source (A-Z)"
+msgstr ""
+
+#: ../Settings.lua:115
+msgid "Source (Z-A)"
+msgstr ""
+
+#: ../Settings.lua:123
+msgid "Items per page (0 = auto)"
+msgstr "Elemek oldalanként (0 = automatikus)"
+
+#: ../Settings.lua:134
+msgid "Grid columns"
+msgstr "Rács oszlopok"
+
+#: ../Settings.lua:145
+msgid "Grid rows"
+msgstr "Rács sorok"
+
+#: ../Settings.lua:156
+msgid "Show title in grid mode"
+msgstr "Cím megjelenítése rács módban"
+
+#: ../Settings.lua:165
+msgid "Show metadata in grid mode"
+msgstr "Metaadatok megjelenítése rács módban"
+
+#: ../Settings.lua:174
+msgid "Tap manga action"
+msgstr "Koppintson a manga műveletre"
+
+#: ../Settings.lua:176
+msgid "Open chapter list"
+msgstr "Fejezetlista megnyitása"
+
+#: ../Settings.lua:177
+msgid "Continue reading"
+msgstr "Olvass tovább"
+
+#: ../Settings.lua:187
+msgid "Skip resume reading confirmation"
+msgstr "Az olvasás folytatásának megerősítése kihagyása"
+
+#: ../Settings.lua:200
+msgid "Search view mode"
+msgstr "Keresési nézet mód"
+
+#: ../Settings.lua:211
+msgid "Reader"
+msgstr "Olvasó"
+
+#: ../Settings.lua:217
+msgid "Chapter sorting mode"
+msgstr "Fejezetrendezési mód"
+
+#: ../Settings.lua:219
+msgid "By chapter ascending"
+msgstr "Fejezetenként növekvő sorrendben"
+
+#: ../Settings.lua:220
+msgid "By chapter descending"
+msgstr "Fejezetenként csökkenő sorrendben"
+
+#: ../Settings.lua:228
+msgid "Chapter title in statistics (ComicInfo)"
+msgstr "Fejezet címe a statisztikákban (ComicInfo)"
+
+#: ../Settings.lua:230
+msgid "Chapter title only"
+msgstr "Csak a fejezet címe"
+
+#: ../Settings.lua:231
+msgid "Series + chapter title"
+msgstr "Sorozat + fejezetcím"
+
+#: ../Settings.lua:232
+msgid "Series + chapter number"
+msgstr "Sorozat + fejezetszám"
+
+#: ../Settings.lua:241
+msgid "Preload chapters on reader open"
+msgstr "Fejezetek előtöltése az olvasóban nyitva"
+
+#: ../Settings.lua:252
+msgid "Optimize page images (experimental)"
+msgstr "Oldalképek optimalizálása (kísérleti)"
+
+#: ../Settings.lua:260
+msgid "Concurrent page requests"
+msgstr "Egyidejű oldalkérések"
+
+#: ../Settings.lua:271
+msgid "Never turn on RTL, even for Japanese manga"
+msgstr "Soha ne kapcsold be az RTL-t, még japán mangánál sem"
+
+#: ../Settings.lua:280
+msgid "Automatically set the viewer to manga mode"
+msgstr "A megtekintő automatikus beállítása manga módba"
+
+#: ../Settings.lua:289
+msgid "Global viewer override"
+msgstr "Globális megtekintő felülbírálása"
+
+#: ../Settings.lua:306
+msgid "Show button previous chapter in toolbar reader"
+msgstr "A gomb előző fejezetének megjelenítése az eszköztár-olvasóban"
+
+#: ../Settings.lua:315
+msgid "Show button next chapter in toolbar reader"
+msgstr "A gomb következő fejezetének megjelenítése az eszköztár-olvasóban"
+
+#: ../Settings.lua:324
+msgid "Display the expanded rakuyomi bottom toolbar in the reader"
+msgstr "Jelenítse meg a kibontott rakuyomi alsó eszköztárat az olvasóban"
+
+#: ../Settings.lua:327
+msgid "On bottom toolbar"
+msgstr "Az alsó eszköztáron"
+
+#: ../Settings.lua:328
+msgid "On top toolbar"
+msgstr "A felső eszköztáron"
+
+#: ../Settings.lua:336
+msgid "Recommended reader settings"
+msgstr "Ajánlott olvasói beállítások"
+
+#: ../Settings.lua:342
+msgid "Turn off all margins"
+msgstr "Kapcsolja ki az összes margót"
+
+#: ../Settings.lua:351
+msgid "Automatically crop excess edges from photos (a little slow)"
+msgstr "A fotók felesleges széleinek automatikus levágása (kicsit lassú)"
+
+#: ../Settings.lua:360
+msgid "Zoom to full screen"
+msgstr "Nagyítás teljes képernyőre"
+
+#: ../Settings.lua:369
+msgid "Zoom to fit image size"
+msgstr "Nagyítás a kép méretéhez"
+
+#: ../Settings.lua:382
+msgid "Chapter storage path"
+msgstr "Fejezet tárolási útvonala"
+
+#: ../Settings.lua:391
+msgid "Storage size limit"
+msgstr "A tárhely méretének korlátja"
+
+#: ../Settings.lua:401
+msgid "Delete downloads when removing from library"
+msgstr ""
+
+#: ../Settings.lua:409
+msgid "Delete downloads after marking as read"
+msgstr ""
+
+#: ../Settings.lua:417
+#, fuzzy
+msgid "Total downloaded"
+msgstr "Fejezet letöltve"
+
+#: ../Settings.lua:438
+msgid "Write chapters to RAM (protect eMMC)"
+msgstr "Fejezetek írása a RAM-ba (az eMMC védelme)"
+
+#: ../Settings.lua:446
+msgid "RAM storage size. Your RAM is: "
+msgstr "RAM tárhely mérete. "
+
+#: ../Settings.lua:455
+msgid "Network"
+msgstr "Hálózat"
+
+#: ../Settings.lua:461
+msgid "HTTP, HTTPS or SOCKS5 Proxy"
+msgstr "HTTP, HTTPS vagy SOCKS5 proxy"
+
+#: ../Settings.lua:464
+msgid "Proxy URL must start with http://, https://, or socks5://"
+msgstr "A proxy URL-jének http://, https:// vagy socks5:// előtaggal kell kezdődnie"
+
+#: ../Settings.lua:469
+msgid "Sync & Updates"
+msgstr "Szinkronizálás és frissítések"
+
+#: ../Settings.lua:475
+msgid "WebDAV Sync"
+msgstr "WebDAV szinkronizálás"
+
+#: ../Settings.lua:483
+msgid "Enabled cron check for manga updates"
+msgstr "Engedélyezte a cron ellenőrzését a manga frissítésekért"
+
+#: ../Settings.lua:491
+msgid "Source IDs skip check update"
+msgstr "A forrásazonosítók kihagyják az ellenőrzési frissítést"
+
+#: ../Settings.lua:497
+msgid "System"
+msgstr "Rendszer"
+
+#: ../Settings.lua:503
+msgid "Allow requisition of the back button"
+msgstr "Engedélyezze a vissza gomb igénylését"
+
+#: ../Settings.lua:510
+msgid "Server"
+msgstr "Szerver"
+
+#: ../Settings.lua:516
+msgid "Auto-stop server when leaving library view"
+msgstr "A szerver automatikus leállítása a könyvtár nézet elhagyásakor"
+
+#: ../Settings.lua:518
+msgid "Disabled"
+msgstr "Letiltva"
+
+#: ../Settings.lua:519
+msgid "Immediate"
+msgstr "Azonnali"
+
+#: ../Settings.lua:520
+msgid "After 30 seconds"
+msgstr "30 másodperc után"
+
+#: ../Settings.lua:521
+msgid "After 1 minute"
+msgstr "1 perc múlva"
+
+#: ../Settings.lua:522
+msgid "After 5 minutes"
+msgstr "5 perc múlva"
+
+#: ../Settings.lua:523
+msgid "After 10 minutes"
+msgstr "10 perc múlva"
+
+#: ../Settings.lua:533
+msgid "Show chapter download progress"
+msgstr "Fejezet letöltési folyamatának megjelenítése"
+
+#: ../Settings.lua:540
+msgid "Logging"
+msgstr "Fakitermelés"
+
+#: ../Settings.lua:546
+msgid "Disable logging"
+msgstr "Naplózás letiltása"
+
+#: ../Settings.lua:733
+msgid "Failed to test proxy"
+msgstr "A proxy tesztelése nem sikerült"
+
+#: ../SourceSettings.lua:197
+msgid "Source settings"
+msgstr "Forrás beállításai"
+
+#: ../TrackingMenu.lua:45
+msgid "Volumes"
+msgstr "Kötetek"
+
+#: ../TrackingMenu.lua:80 ../TrackingMenu.lua:133
+msgid "Loading tracking..."
+msgstr "Nyomon követés betöltése..."
+
+#: ../TrackingMenu.lua:123
+msgid "Select Tracking Service"
+msgstr "Válassza a Követési szolgáltatás lehetőséget"
+
+#: ../TrackingMenu.lua:152
+msgid "Link"
+msgstr "Link"
+
+#: ../TrackingMenu.lua:152
+msgid "Relink"
+msgstr "Újralink"
+
+#: ../TrackingMenu.lua:164
+msgid "Pull progress"
+msgstr "Haladás húzása"
+
+#: ../TrackingMenu.lua:171
+msgid "Push progress"
+msgstr "Nyomja meg a haladást"
+
+#: ../TrackingMenu.lua:182 ../TrackingMenu.lua:189
+#: ../widgets/SettingItemValue.lua:130 ../widgets/SettingItemValue.lua:141
+msgid "Not set"
+msgstr "Nincs beállítva"
+
+#: ../TrackingMenu.lua:182
+msgid "Start"
+msgstr "Indul"
+
+#: ../TrackingMenu.lua:189
+msgid "End"
+msgstr "Vége"
+
+#: ../TrackingMenu.lua:200
+msgid "Unlink"
+msgstr "Leválasztás"
+
+#: ../TrackingMenu.lua:212
+msgid "Other services"
+msgstr "Egyéb szolgáltatások"
+
+#: ../TrackingMenu.lua:232
+msgid "Search tracker title"
+msgstr "Keresés a nyomkövető címében"
+
+#: ../TrackingMenu.lua:235
+msgid "Search for a matching manga entry to link with this title."
+msgstr "Keressen egy megfelelő manga-bejegyzést, hogy ezzel a címmel hivatkozzon."
+
+#: ../TrackingMenu.lua:254
+msgid "Searching tracker..."
+msgstr "Nyomkövető keresése..."
+
+#: ../TrackingMenu.lua:266
+msgid "No tracking results found."
+msgstr "Nem található nyomkövetési eredmény."
+
+#: ../TrackingMenu.lua:295
+msgid "Linking tracker entry..."
+msgstr "Követő bejegyzés összekapcsolása..."
+
+#: ../TrackingMenu.lua:307
+msgid "Linked with"
+msgstr "Kapcsolódik a"
+
+#: ../TrackingMenu.lua:329
+msgid "Pulling tracking progress..."
+msgstr "A nyomon követés lekérése..."
+
+#: ../TrackingMenu.lua:329
+msgid "Pushing tracking progress..."
+msgstr "A nyomon követés nyomon követése..."
+
+#: ../TrackingMenu.lua:341
+msgid "No tracking binding found for this service."
+msgstr "Nem található nyomkövetési kötés ehhez a szolgáltatáshoz."
+
+#: ../TrackingMenu.lua:363
+msgid "End date"
+msgstr "Befejezés dátuma"
+
+#: ../TrackingMenu.lua:363
+msgid "Start date"
+msgstr "Kezdés dátuma"
+
+#: ../TrackingMenu.lua:370
+msgid "Enter date in DD/MM/YYYY format, or leave empty to clear."
+msgstr "Írja be a dátumot NN/MM/YYYY formátumban, vagy hagyja üresen a törléshez."
+
+#: ../TrackingMenu.lua:393
+msgid "Saving date..."
+msgstr "Dátum mentése..."
+
+#: ../TrackingMenu.lua:411
+msgid "cleared"
+msgstr "törölve"
+
+#: ../TrackingMenu.lua:427
+msgid "Removing tracking binding..."
+msgstr "Követési kötés eltávolítása..."
+
+#: ../TrackingMenu.lua:439
+msgid "Unlinked"
+msgstr "Leválasztva"
+
+#: ../TrackingSettings.lua:96
+msgid "Paste AniList token"
+msgstr "Az AniList token beillesztése"
+
+#: ../TrackingSettings.lua:103
+msgid "Paste MAL client ID"
+msgstr "Illessze be a MAL ügyfélazonosítót"
+
+#: ../TrackingSettings.lua:104
+msgid "Paste MAL client secret"
+msgstr "Illessze be a MAL-ügyféltitkot"
+
+#: ../TrackingSettings.lua:105
+msgid "Paste MAL refresh token"
+msgstr "Illessze be a MAL frissítési tokent"
+
+#: ../TrackingSettings.lua:112
+msgid "Paste Shikimori client ID"
+msgstr "Illessze be a Shikimori ügyfélazonosítót"
+
+#: ../TrackingSettings.lua:113
+msgid "Paste Shikimori client secret"
+msgstr "Illessze be a Shikimori ügyféltitkot"
+
+#: ../TrackingSettings.lua:114
+msgid "Paste Shikimori refresh token"
+msgstr "Illessze be Shikimori frissítési tokent"
+
+#: ../TrackingSettings.lua:121
+msgid "Paste Bangumi refresh token"
+msgstr "Illessze be a Bangumi frissítési tokent"
+
+#: ../TrackingSettings.lua:128
+msgid "Paste MangaBaka refresh token"
+msgstr "Illessze be a MangaBaka frissítési tokent"
+
+#: ../TrackingSettings.lua:129
+msgid "Paste MangaBaka API Key (mb-...)"
+msgstr "Paste MangaBaka API Key (mb-...)"
+
+#: ../TrackingSettings.lua:136
+msgid "Paste Kavita API Key"
+msgstr "Illessze be a Kavita API-kulcsot"
+
+#: ../TrackingSettings.lua:143
+msgid "Komga API key or username:password"
+msgstr "Komga API kulcs vagy felhasználónév:jelszó"
+
+#: ../TrackingSettings.lua:150
+msgid "Suwayomi Basic Auth username:password"
+msgstr "Suwayomi Basic Auth felhasználónév:jelszó"
+
+#: ../TrackingSettings.lua:161
+msgid "Sign out"
+msgstr "Jelentkezzen ki"
+
+#: ../TrackingSettings.lua:163
+msgid "Sign in"
+msgstr "Jelentkezzen be"
+
+#: ../TrackingSettings.lua:183 ../TrackingSettings.lua:214
+msgid "Validate "
+msgstr "Érvényesít"
+
+#: ../TrackingSettings.lua:187 ../TrackingSettings.lua:218
+msgid "Validating..."
+msgstr "Érvényesítés..."
+
+#: ../TrackingSettings.lua:200 ../TrackingSettings.lua:202
+#: ../TrackingSettings.lua:229
+msgid "Credentials are valid."
+msgstr "A hitelesítő adatok érvényesek."
+
+#: ../TrackingSettings.lua:240
+msgid "Auto sync reading progress"
+msgstr "Automatikus szinkron olvasási folyamat"
+
+#: ../TrackingSettings.lua:246
+msgid "OAuth Bridge Server"
+msgstr "OAuth Bridge szerver"
+
+#: ../TrackingSettings.lua:252
+msgid "OAuth Bridge Server URL"
+msgstr "Az OAuth Bridge szerver URL-címe"
+
+#: ../TrackingSettings.lua:499
+msgid "Signed in as "
+msgstr "Bejelentkezve mint"
+
+#: ../TrackingSettings.lua:501
+msgid "No sign"
+msgstr "Nincs jel"
+
+#: ../UpdateChecker.lua:23
+msgid "Cannot check for updates while offline"
+msgstr "Offline állapotban nem lehet frissítéseket keresni"
+
+#: ../UpdateChecker.lua:38
+msgid "You're running the latest version!"
+msgstr "A legújabb verziót futtatod!"
+
+#: ../UpdateChecker.lua:49 ../UpdateChecker.lua:73
+#, lua-format
+msgid "Version"
+msgstr "Változat"
+
+#: ../UpdateChecker.lua:49
+#, lua-format
+msgid "Would you like to update now?"
+msgstr "Szeretne most frissíteni?"
+
+#: ../UpdateChecker.lua:49
+#, lua-format
+msgid "You're currently running version "
+msgstr "Jelenleg a verziót futtatod"
+
+#: ../UpdateChecker.lua:49
+#, lua-format
+msgid "is available"
+msgstr "elérhető"
+
+#: ../UpdateChecker.lua:57
+msgid "Later"
+msgstr "Később"
+
+#: ../UpdateChecker.lua:63
+msgid "Update Now"
+msgstr "Frissítés most"
+
+#: ../UpdateChecker.lua:73
+#, lua-format
+msgid "is available. You're currently running version "
+msgstr "elérhető. "
+
+#: ../UpdateChecker.lua:74
+#, lua-format
+msgid "This update cannot be installed automatically"
+msgstr "Ez a frissítés nem telepíthető automatikusan"
+
+#: ../UpdateChecker.lua:74
+#, lua-format
+msgid "please visit the user guide for instructions."
+msgstr "kérjük, olvassa el a használati útmutatót az utasításokért."
+
+#: ../UpdateChecker.lua:82
+msgid "OK"
+msgstr "RENDBEN"
+
+#: ../UpdateChecker.lua:102
+msgid "Updating rakuyomi, please wait..."
+msgstr "Rakuyomi frissítése, kérjük, várjon..."
+
+#: ../UpdateChecker.lua:118
+msgid "Restart Now"
+msgstr "Indítsa újra most"
+
+#: ../UpdateChecker.lua:129
+msgid "KOReader needs to be restarted to apply the changes."
+msgstr "A módosítások alkalmazásához újra kell indítani a KOReader programot."
+
+#: ../UpdateChecker.lua:129
+msgid "The update has been installed successfully"
+msgstr "A frissítés telepítése sikeresen megtörtént"
+
+#: ../UpdateChecker.lua:139
+msgid "Restarting..."
+msgstr "Újraindítás..."
+
+#: ../_meta.lua:5
+msgid "rakuyomi"
+msgstr "rakuyomi"
+
+#: ../_meta.lua:6
+msgid "Download mangas on your e-book reader!"
+msgstr "Töltsön le mangákat az e-könyv olvasójára!"
+
+#: ../handlers/addToPlaylist.lua:17
+msgid "Added to"
+msgstr "Hozzáadva"
+
+#: ../main.lua:42 ../main.lua:60
+msgid "Rakuyomi"
+msgstr "Rakuyomi"
+
+#: ../main.lua:70
+msgid "Oops!"
+msgstr "Hoppá!"
+
+#: ../main.lua:70
+msgid "Rakuyomi encountered an issue while starting up!"
+msgstr "Rakuyomi problémába ütközött az indítás során!"
+
+#: ../main.lua:71
+msgid "Here are some messages that might help identify the problem:"
+msgstr "Íme néhány üzenet, amelyek segíthetnek azonosítani a problémát:"
+
+#: ../utils/calcLastReadText.lua:13
+msgid "jnow"
+msgstr "jnow"
+
+#: ../utils/calcLastReadText.lua:13
+msgid "just now"
+msgstr "éppen most"
+
+#: ../utils/calcLastReadText.lua:15
+#, lua-format
+msgid "%dm"
+msgstr "%dm"
+
+#: ../utils/calcLastReadText.lua:15
+msgid "minutes"
+msgstr "jegyzőkönyv"
+
+#: ../utils/calcLastReadText.lua:17
+#, lua-format
+msgid "%dh"
+msgstr "%dh"
+
+#: ../utils/calcLastReadText.lua:17
+msgid "hours"
+msgstr "óra"
+
+#: ../utils/calcLastReadText.lua:19
+#, lua-format
+msgid "%dd"
+msgstr "%dd"
+
+#: ../utils/calcLastReadText.lua:19
+msgid "days"
+msgstr "napokon"
+
+#: ../utils/calcLastReadText.lua:21
+#, lua-format
+msgid "%dw"
+msgstr "%dw"
+
+#: ../utils/calcLastReadText.lua:21
+msgid "weeks"
+msgstr "hét"
+
+#: ../utils/calcLastReadText.lua:23
+#, lua-format
+msgid "%dM"
+msgstr "%dM"
+
+#: ../utils/calcLastReadText.lua:23
+msgid "months"
+msgstr "hónapokban"
+
+#: ../utils/calcLastReadText.lua:25
+#, lua-format
+msgid "%dy"
+msgstr "%dy"
+
+#: ../utils/calcLastReadText.lua:25
+msgid "years"
+msgstr "év"
+
+#: ../utils/getChapterDisplayName.lua:7
+msgid "Vol."
+msgstr "Vol."
+
+#: ../utils/getChapterDisplayName.lua:10
+msgid "Ch."
+msgstr "Ch."
+
+#: ../widgets/Menu.lua:84
+msgid "Offline mode"
+msgstr "Offline mód"
+
+#: ../widgets/SettingItemValue.lua:170
+msgid "Executing..."
+msgstr "Végrehajtó..."
+
+#: ../widgets/SettingItemValue.lua:183
+msgid "Done"
+msgstr "Kész"
+
+#: ../widgets/SettingItemValue.lua:206
+msgid "Ok"
+msgstr "Rendben"
+
+#: ../widgets/SettingItemValue.lua:267
+msgid "Select"
+msgstr "Válassza ki"
+
+#: ../widgets/SettingItemValue.lua:392
+msgid "Invalid value"
+msgstr "Érvénytelen érték"
+
+#~ msgid "Count unread chapters ascending"
+#~ msgstr "Az olvasatlan fejezetek számlálása növekvő sorrendben"
+
+#~ msgid "Count unread chapters descending"
+#~ msgstr "Az olvasatlan fejezetek számolása csökkenő sorrendben"
+
+#~ msgid "Last read ascending"
+#~ msgstr "Utolsó olvasás növekvő sorrendben"
+
+#~ msgid "Order added ascending (Default)"
+#~ msgstr "Rendelés hozzáadva növekvő sorrendben (alapértelmezett)"
+
+#~ msgid "Order added descending"
+#~ msgstr "Megrendelés hozzáadva csökkenő sorrendben"
+
+#~ msgid "Source ascending"
+#~ msgstr "Forrás növekvő"
+
+#~ msgid "Source descending"
+#~ msgstr "Forrás csökkenő"
+
+#~ msgid "Title manga ascending"
+#~ msgstr "Cím manga növekvő"
+
+#~ msgid "Title manga descending"
+#~ msgstr "Cím manga csökkenő"

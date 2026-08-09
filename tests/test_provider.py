@@ -103,8 +103,19 @@ def python_json_decode(text):
     return to_lua(json.loads(text))
 
 
+requested_bodies = []
+
+
 def python_http_request(arg):
     url = arg["url"]
+    # Drain the POST body (an ltn12 source generator) so tests can assert on the
+    # request parameters the provider sent.
+    source = arg["source"]
+    if source is not None:
+        chunk = source()
+        requested_bodies.append(chunk if isinstance(chunk, str) else "")
+    else:
+        requested_bodies.append("")
     for marker, body in ROUTES:
         if marker in url:
             arg["sink"](body)
@@ -121,13 +132,61 @@ lua.execute(
         return { set_timeout = function() end, reset_timeout = function() end }
     end
     package.preload["socket.url"] = function()
-        return { escape = function(value) return value end }
+        return {
+            escape = function(value) return value end,
+            parse = function(s)
+                local scheme, rest = s:match("^(%a[%w+.-]*)://(.*)$")
+                if not scheme then return nil end
+                local host = rest:match("^([^/]+)")
+                return host and { scheme = scheme, host = host } or { scheme = scheme }
+            end,
+        }
     end
     package.preload["ltn12"] = function()
-        return { sink = { file = function() end } }
+        return {
+            sink = { file = function() return function() end end },
+            source = { string = function(s)
+                local sent = false
+                return function()
+                    if not sent then sent = true return s end
+                end
+            end },
+        }
     end
     package.preload["rapidjson"] = function()
         return { decode = function(text) return python_json_decode(text) end }
+    end
+    package.preload["json"] = function()
+        -- Lua 5.4+ functions cannot carry fields, and the provider reads
+        -- json.decode.simple, so decode is a callable table instead.
+        local decode = setmetatable({ simple = true }, {
+            __call = function(_, text, simple) return python_json_decode(text) end,
+        })
+        return { decode = decode }
+    end
+    package.preload["datastorage"] = function()
+        return { getSettingsDir = function() return "" end }
+    end
+    package.preload["luasettings"] = function()
+        return { open = function(path)
+            local data = {}
+            return {
+                data = data,
+                readSetting = function(_, key) return data[key] end,
+                saveSetting = function(_, key, value) data[key] = value end,
+                flush = function() end,
+            }
+        end }
+    end
+    package.preload["util"] = function()
+        return {
+            trim = function(s) return (s:gsub("^%s+", ""):gsub("%s+$", "")) end,
+            urlEncode = function(s)
+                return (s:gsub("([^%w%-%._~])", function(c)
+                    return string.format("%%%02X", string.byte(c))
+                end))
+            end,
+        }
     end
     package.preload["socket.http"] = function()
         return { request = function(arg) return python_http_request(arg) end }
@@ -189,6 +248,125 @@ assert hydrated["size"] == "1.0 MB"
 assert restricted is None
 assert "restricted" in restricted_err.lower()
 
+# ==================================================== Z-Library provider
+
+# Fixtures for the Z-Library eAPI routes. The /file route must be listed before
+# the book-details route so the marker matching picks the longer path.
+SEARCH_Z = {
+    "books": [
+        {"id": 42, "hash": "abc123", "title": "Crime and Punishment",
+         "author": "Fyodor Dostoevsky", "year": "1866", "language": "english",
+         "extension": "epub", "filesizeString": "1.2 MB", "filesize": 1258291,
+         "interestScore": "98", "cover": "https://z-lib.fo/covers/42.jpg",
+         "description": "A novel."},
+    ],
+    "pagination": {"total_items": 321},
+}
+DETAILS_Z = {"success": 1, "book": {
+    "id": 42, "hash": "abc123", "title": "Crime and Punishment",
+    "extension": "epub", "filesizeString": "1.2 MB", "filesize": 1258291,
+    "description": "A longer description."}}
+LINK_Z = {"success": 1, "file": {
+    "downloadLink": "https://z-lib.fo/dl/42", "extension": "epub",
+    "allowDownload": True}}
+LOGIN_OK = {"success": 1, "user": {"id": 123, "remix_userkey": "key456"}}
+
+ROUTES.extend([
+    ("/eapi/user/login", json.dumps(LOGIN_OK)),
+    ("/eapi/book/search", json.dumps(SEARCH_Z)),
+    ("/eapi/book/42/abc123/file", json.dumps(LINK_Z)),
+    ("/eapi/book/42/abc123", json.dumps(DETAILS_Z)),
+])
+
+zprovider = lua.execute(Path("bookdrop.koplugin/bookdrop_zlibrary_provider.lua").read_text())
+lua.globals()["zprovider"] = zprovider
+
+lua.execute(
+    r'''
+    zpage = zprovider:search("dostoevsky", 1, {})
+    zfiltered, zfiltered_err = zprovider:search("x", 1, {
+        language = "es", formats = { epub = true, mobi = true }, sort = "" })
+    zlogin_ok, zlogin_err = zprovider.login("user@example.com", "secret")
+    zsigned_in = zprovider:isSignedIn()
+    zcredentials = zprovider:getCredentials()
+    zhydrated, zhydrated_err = zprovider:hydrate({
+        provider_id = "42", hash = "abc123", title = "Crime and Punishment",
+        author = "Fyodor Dostoevsky" })
+    zprovider:signOut()
+    zsignout, zsignout_err = zprovider:hydrate({
+        provider_id = "42", hash = "abc123" })
+    '''
+)
+
+zpage = lua.globals().zpage
+zbooks = zpage["books"]
+assert len(zbooks) == 1, f"expected 1 z-library record, got {len(zbooks)}"
+zfirst = zbooks[1]
+assert zfirst["title"] == "Crime and Punishment"
+assert zfirst["author"] == "Fyodor Dostoevsky"
+assert zfirst["id"] == "zlibrary-42-abc123"
+assert zfirst["provider"] == "zlibrary"
+assert zfirst["provider_id"] == "42"
+assert zfirst["hash"] == "abc123"
+assert zfirst["format"] == "EPUB"
+assert zfirst["cover_url"] == "https://z-lib.fo/covers/42.jpg"
+assert zfirst["source"] == "Z-Library"
+assert zpage["total"] == 321
+assert zpage["has_next"] is True
+
+zfiltered = lua.globals().zfiltered
+assert zfiltered is not None, f"filtered search failed: {lua.globals().zfiltered_err}"
+# The filter request is the last POST carrying a search message. Brackets in
+# the parameter keys are literal (only values are URL-encoded, as upstream);
+# extensions order is nondeterministic (pairs iteration).
+filtered_body = [b for b in requested_bodies if "message=" in b][-1]
+assert "languages[0]=spanish" in filtered_body, filtered_body
+assert "extensions[0]=" in filtered_body and "extensions[1]=" in filtered_body, filtered_body
+assert "epub" in filtered_body and "mobi" in filtered_body, filtered_body
+assert "order=bestmatch" in filtered_body, filtered_body
+
+assert lua.globals().zlogin_ok is True, f"login failed: {lua.globals().zlogin_err}"
+assert lua.globals().zsigned_in is True
+assert lua.globals().zcredentials["user_id"] == "123"
+assert lua.globals().zcredentials["user_key"] == "key456"
+
+zhydrated = lua.globals().zhydrated
+assert zhydrated is not None, f"hydrate failed: {lua.globals().zhydrated_err}"
+zacquisitions = zhydrated["acquisitions"]
+assert len(zacquisitions) == 1
+assert zacquisitions[1]["url"] == "https://z-lib.fo/dl/42"
+assert zacquisitions[1]["extension"] == "epub"
+assert zacquisitions[1]["format"] == "EPUB"
+assert zacquisitions[1]["referer"].endswith("/eapi/book/42/abc123")
+
+assert lua.globals().zsignout is None
+assert "sign-in" in lua.globals().zsignout_err.lower()
+
+# Regression: credentials live in a provider-private settings file, so they
+# survive Bookdrop's own settings handle being flushed with stale data (a
+# filter/view/recent-books change would otherwise overwrite the shared file
+# with a table that has no credentials in it).
+lua.execute(
+    r'''
+    local luasettings = require("luasettings")
+    zprovider.saveCredentials("isolated@example.com", "pw", "7", "key7")
+    -- Bookdrop's main settings file is flushed independently, as any filter or
+    -- view change does; it must not touch the provider's own file.
+    local main_settings = luasettings.open("bookdrop.lua")
+    main_settings:saveSetting("filters", { content = "book_fiction" })
+    main_settings:flush()
+    zisolated_creds = zprovider.getCredentials()
+    zisolated_signed_in = zprovider.isSignedIn()
+    '''
+)
+assert lua.globals().zisolated_creds["user_id"] == "7"
+assert lua.globals().zisolated_creds["user_key"] == "key7"
+assert lua.globals().zisolated_signed_in is True
+
 print(f"parsed {len(books)} catalog records with cover metadata")
 print(f"hydrated {len(acquisitions)} public acquisitions; "
       f"restricted item rejected: {restricted is None}")
+print(f"z-library: searched, signed in, hydrated {len(zacquisitions)} acquisition; "
+      f"sign-out blocks hydrate: {lua.globals().zsignout is None}")
+print(f"z-library credentials survive a settings flush: "
+      f"{lua.globals().zisolated_signed_in}")
