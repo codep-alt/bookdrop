@@ -102,22 +102,7 @@ function ZlibraryProvider.getBaseUrl()
     return SEED_URLS[1]:gsub("/$", "")
 end
 
--- Try each seed URL in order for a request, returning the first success.
--- Used when no user-configured base URL is set.
-local function requestWithSeedFallback(path, method, headers, body)
-    local configured = settings():readSetting(SETTINGS_BASE_URL_KEY)
-    if configured and configured ~= "" then
-        return requestJson(configured:gsub("/$", "") .. path, method, headers, body)
-    end
-    for i = 1, #SEED_URLS do
-        local url = SEED_URLS[i]:gsub("/$", "") .. path
-        local payload, err = requestJson(url, method, headers, body)
-        if payload then return payload, nil end
-    end
-    return nil, "All Z-Library mirrors are unreachable"
-end
-
--- Validates and stores a base URL; returns ok, err.
+-- ---------------------------------------------------------------- settings
 function ZlibraryProvider.setBaseUrl(url_string)
     if not url_string or url_string == "" then
         return false, "URL cannot be empty."
