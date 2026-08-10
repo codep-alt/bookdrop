@@ -206,11 +206,10 @@ end
 local function authedHeaders(user_id, user_key, body)
     local headers = {
         ["Accept"] = "application/json, text/javascript, */*; q=0.01",
-        ["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8",
         ["User-Agent"] = USER_AGENT,
-        ["X-Requested-With"] = "XMLHttpRequest",
     }
     if body then
+        headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
         headers["Content-Length"] = tostring(#body)
     end
     if user_id and user_key then
