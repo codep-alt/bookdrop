@@ -21,6 +21,14 @@ local _ = require("gettext")
 local T = require("ffi/util").template
 
 local Bookdrop = WidgetContainer:extend{ name = "bookdrop", settings = nil }
+local function showKeyboard(dialog)
+    -- On devices with a physical keyboard (macOS emulator), skip the
+    -- virtual keyboard to avoid stealing input focus.
+    if not Device:hasKeyboard() then
+        dialog.skip_first_show_keyboard = nil
+        dialog:onShowKeyboard()
+    end
+end
 local CHECKED = "✓"
 local UNCHECKED = "□"
 
@@ -940,8 +948,7 @@ function Bookdrop:showSearchDialog(parent_widget, initial_query)
         }},
     }
     UIManager:show(dialog)
-    dialog.skip_first_show_keyboard = nil
-    dialog:onShowKeyboard()
+    showKeyboard(dialog)
 end
 
 local function appendUniqueBooks(target, additions, seen)
@@ -978,8 +985,7 @@ function Bookdrop:showZlibraryBaseUrlDialog(home)
         }},
     }
     UIManager:show(dialog)
-    dialog.skip_first_show_keyboard = nil
-    dialog:onShowKeyboard()
+    showKeyboard(dialog)
 end
 
 function Bookdrop:showZlibrarySignInDialog(home)
@@ -1000,8 +1006,7 @@ function Bookdrop:showZlibrarySignInDialog(home)
         }},
     }
     UIManager:show(dialog)
-    dialog.skip_first_show_keyboard = nil
-    dialog:onShowKeyboard()
+    showKeyboard(dialog)
 end
 
 function Bookdrop:showZlibraryPasswordDialog(home, email)
@@ -1022,8 +1027,7 @@ function Bookdrop:showZlibraryPasswordDialog(home, email)
         }},
     }
     UIManager:show(dialog)
-    dialog.skip_first_show_keyboard = nil
-    dialog:onShowKeyboard()
+    showKeyboard(dialog)
 end
 
 function Bookdrop:performZlibraryLogin(home, email, password)
