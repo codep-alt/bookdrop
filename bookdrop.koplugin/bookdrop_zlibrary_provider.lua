@@ -188,12 +188,16 @@ end
 
 -- ---------------------------------------------------------------- http
 
-local function authedHeaders(user_id, user_key)
+local function authedHeaders(user_id, user_key, body)
     local headers = {
         ["Accept"] = "application/json, text/javascript, */*; q=0.01",
         ["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8",
         ["User-Agent"] = USER_AGENT,
+        ["X-Requested-With"] = "XMLHttpRequest",
     }
+    if body then
+        headers["Content-Length"] = tostring(#body)
+    end
     if user_id and user_key then
         headers["Cookie"] = string.format("remix_userid=%s; remix_userkey=%s", user_id, user_key)
     end
@@ -234,7 +238,14 @@ local function httpRequest(url_string, method, headers, body)
         if not ok or tonumber(code) ~= 200 then
             local location = response_headers and response_headers.location
             if location and code and tonumber(code) >= 300 and tonumber(code) < 400 then
-                -- Follow one manual hop for 3xx (GET keeps the body for POST).
+                -- Resolve relative redirects against the current URL.
+                local parsed = url.parse(location)
+                if not (parsed and parsed.host) then
+                    local base = url.parse(url_string)
+                    if base then
+                        location = (base.scheme or "https") .. "://" .. base.host .. location
+                    end
+                end
                 url_string = location
             else
                 return nil, status or ("HTTP " .. tostring(code))
@@ -373,7 +384,7 @@ function ZlibraryProvider:search(query, page, filters)
 
     local body = table.concat(body_parts, "&")
     local payload, err = requestJson(url_string, "POST",
-        authedHeaders(credentials.user_id, credentials.user_key), body)
+        authedHeaders(credentials.user_id, credentials.user_key, body), body)
     if not payload then return nil, err end
 
     if payload.error then
