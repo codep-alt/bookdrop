@@ -249,6 +249,9 @@ local function httpRequest(url_string, method, headers, body)
         socketutil:reset_timeout()
 
         if too_large then return nil, "Z-Library response exceeded 4 MiB" end
+
+        local response_body = table.concat(chunks)
+
         if not ok or tonumber(code) ~= 200 then
             local location = response_headers and response_headers.location
             if location and code and tonumber(code) >= 300 and tonumber(code) < 400 then
@@ -262,10 +265,16 @@ local function httpRequest(url_string, method, headers, body)
                 end
                 url_string = location
             else
+                -- Z-Library often returns non-200 with a JSON error body
+                -- (e.g. HTTP 400 + {"success":0,"error":"..."}).  Return the
+                -- body so callers can surface the real error message.
+                if response_body and response_body ~= "" then
+                    return response_body
+                end
                 return nil, status or ("HTTP " .. tostring(code))
             end
         else
-            return table.concat(chunks)
+            return response_body
         end
     end
     return nil, "Too many redirects"
