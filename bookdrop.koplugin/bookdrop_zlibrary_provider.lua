@@ -27,7 +27,10 @@ local ZlibraryProvider = {
     name = "Z-Library",
     page_size = 10,
     max_response_bytes = 4 * 1024 * 1024,
-    timeout = { 30, 60 },
+    timeout = { 10, 20 },
+    -- Short timeout used while probing fallback mirrors: a live mirror answers
+    -- fast, and a dead one must not stall the whole catalog search.
+    probe_timeout = { 5, 8 },
 }
 
 local USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
@@ -179,7 +182,8 @@ end
 -- One request with bounded redirect following (the operator redirects mirror
 -- hosts to their live domain; socket.http's own redirect would not re-issue a
 -- POST body correctly, so the hop is done by hand, like the upstream plugin).
-local function httpRequest(url_string, method, headers, body)
+local function httpRequest(url_string, method, headers, body, timeout)
+    timeout = timeout or ZlibraryProvider.timeout
     local hops = 0
     while hops < 3 do
         hops = hops + 1
@@ -196,7 +200,7 @@ local function httpRequest(url_string, method, headers, body)
             return 1
         end
 
-        socketutil:set_timeout(ZlibraryProvider.timeout[1], ZlibraryProvider.timeout[2])
+        socketutil:set_timeout(timeout[1], timeout[2])
         local ok, code, response_headers, _, status = http.request{
             url = url_string,
             method = method or "GET",
@@ -250,8 +254,8 @@ local function httpRequest(url_string, method, headers, body)
 end
 
 -- GET/POST that returns the parsed JSON payload (or nil, err).
-local function requestJson(url_string, method, headers, body)
-    local response_body, err = httpRequest(url_string, method, headers, body)
+local function requestJson(url_string, method, headers, body, timeout)
+    local response_body, err = httpRequest(url_string, method, headers, body, timeout)
     if not response_body then return nil, err end
     local ok, payload = pcall(json.decode, response_body, json.decode.simple)
     if not ok or type(payload) ~= "table" then
@@ -264,6 +268,10 @@ end
 -- (or first) base is unreachable.  Transport failures (timeout, DNS, reset)
 -- advance to the next seed; a live API answer — even an error payload — stops
 -- the loop, since that host is reachable and the error is a real one.
+--
+-- Fallback mirrors are probed with a short timeout so a dead mirror fails fast
+-- instead of stalling the whole (blocking) catalog search.  The configured URL
+-- — the user's explicit choice — still gets the full timeout.
 local function requestWithSeedFallback(path, method, headers, body)
     local bases = {}
     local seen = {}
@@ -276,12 +284,20 @@ local function requestWithSeedFallback(path, method, headers, body)
             end
         end
     end
-    add(settings():readSetting(SETTINGS_BASE_URL_KEY))
+    local configured = settings():readSetting(SETTINGS_BASE_URL_KEY)
+    add(configured)
     for _, seed in ipairs(SEED_URLS) do add(seed) end
 
     local last_err = "All Z-Library mirrors are unreachable"
-    for _, base in ipairs(bases) do
-        local payload, err = requestJson(base .. path, method, headers, body)
+    local max_attempts = configured and (1 + 5) or 6
+    for index, base in ipairs(bases) do
+        if index > max_attempts then break end
+        -- Only the user's configured URL gets the full timeout; all seed
+        -- probes are short so a dead mirror fails fast instead of stalling
+        -- the whole (blocking) catalog search.
+        local timeout = (configured and index == 1)
+            and ZlibraryProvider.timeout or ZlibraryProvider.probe_timeout
+        local payload, err = requestJson(base .. path, method, headers, body, timeout)
         if payload then
             return payload, nil
         end
