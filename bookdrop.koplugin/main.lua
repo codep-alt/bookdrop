@@ -7,6 +7,7 @@ local Dispatcher = require("dispatcher")
 local Device = require("device")
 local InfoMessage = require("ui/widget/infomessage")
 local InputDialog = require("ui/widget/inputdialog")
+local Language = require("ui/language")
 local LuaSettings = require("luasettings")
 local LoadingView = require("bookdrop_loadingview")
 local NetworkMgr = require("ui/network/manager")
@@ -54,6 +55,19 @@ local language_options = {
 local sort_options = {
     { "", "Best match" }, { "title", "Title A–Z" },
     { "newest", "Newest publication" }, { "oldest", "Oldest publication" },
+}
+local ui_language_options = {
+    { "C", "English" },
+    { "es", "Español" },
+    { "fr", "Français" },
+    { "de", "Deutsch" },
+    { "it_IT", "Italiano" },
+    { "pt_PT", "Português" },
+    { "pt_BR", "Português do Brasil" },
+    { "ru", "Русский" },
+    { "zh_CN", "简体中文" },
+    { "zh_TW", "中文（台灣）" },
+    { "ja", "日本語" },
 }
 local valid_sorts = { title = true, newest = true, oldest = true }
 local valid_contents = {
@@ -681,6 +695,107 @@ local function safeFilename(value)
     return value ~= "" and value or "book"
 end
 
+local function coverExtension(path)
+    local file = io.open(path, "rb")
+    if not file then return nil end
+    local magic = file:read(8) or ""
+    file:close()
+    if magic:sub(1, 3) == "\255\216\255" then return "jpg" end
+    if magic == "\137PNG\r\n\26\n" then return "png" end
+end
+
+function Bookdrop:saveCoverImage(book, source_path)
+    local extension = coverExtension(source_path)
+    if not extension then
+        UIManager:show(InfoMessage:new{ text = _("The cover is not a supported JPEG or PNG image.") })
+        return
+    end
+
+    local download_dir = G_reader_settings:readSetting("download_dir")
+        or G_reader_settings:readSetting("home_dir")
+        or G_reader_settings:readSetting("lastdir")
+        or Device.home_dir
+        or "."
+    local destination = download_dir .. "/" .. safeFilename(book.title)
+        .. " - cover." .. extension
+    local existing = io.open(destination, "rb")
+    if existing then
+        existing:close()
+        UIManager:show(InfoMessage:new{
+            text = T(_("Cover already downloaded to:\n%1"), destination),
+        })
+        return
+    end
+
+    local temporary_path = destination .. ".part"
+    os.remove(temporary_path)
+    local input, input_err = io.open(source_path, "rb")
+    if not input then
+        UIManager:show(InfoMessage:new{
+            text = T(_("Could not read the cover image: %1"), input_err or _("unknown error")),
+        })
+        return
+    end
+    local output, output_err = io.open(temporary_path, "wb")
+    if not output then
+        input:close()
+        UIManager:show(InfoMessage:new{
+            text = T(_("Could not save the cover image: %1"), output_err or _("unknown error")),
+        })
+        return
+    end
+
+    local copied, copy_err = pcall(function()
+        while true do
+            local chunk = input:read(64 * 1024)
+            if not chunk then break end
+            assert(output:write(chunk))
+        end
+    end)
+    input:close()
+    local closed = output:close()
+    if not copied or not closed or not os.rename(temporary_path, destination) then
+        os.remove(temporary_path)
+        UIManager:show(InfoMessage:new{
+            text = T(_("Could not save the cover image: %1"),
+                copy_err or _("the destination is not writable")),
+        })
+        return
+    end
+
+    UIManager:show(InfoMessage:new{
+        text = T(_("Cover downloaded successfully to:\n%1"), destination),
+    })
+end
+
+function Bookdrop:downloadCover(book)
+    local source_path = book.cover_path or CoverCache:get(book)
+    if source_path then
+        self:saveCoverImage(book, source_path)
+        return
+    end
+    if not book.cover_url then
+        UIManager:show(InfoMessage:new{ text = _("No cover image is available for this book.") })
+        return
+    end
+
+    NetworkMgr:runWhenConnected(function()
+        Trapper:wrap(function()
+            Trapper:info(_("Downloading cover image…"))
+            source_path = CoverCache:fetch(book)
+            Trapper:clear()
+            if source_path then
+                book.cover_path = source_path
+                self:saveCoverImage(book, source_path)
+            else
+                UIManager:show(InfoMessage:new{
+                    text = _("Could not download a cover image for this book."),
+                })
+            end
+        end)
+    end)
+end
+
 function Bookdrop:downloadBook(book, acquisition)
     if not acquisition or not acquisition.url then
         UIManager:show(InfoMessage:new{ text = _("No downloadable file is available.") })
@@ -723,49 +838,94 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
             T(_("Downloading %1 is paused."), book.title),
             _("Cancel download"), _("Continue")
         )
-        local completed, result = Trapper:dismissableRunInSubprocess(function()
-            local http = require("socket.http")
-            local ltn12 = require("ltn12")
-            local socketutil = require("socketutil")
-            local headers = {
-                ["Accept-Encoding"] = "identity",
-                ["User-Agent"] = "KOReader Bookdrop/0.5",
-            }
-            if acquisition.referer then headers["Referer"] = acquisition.referer end
-            local ok, err = pcall(function()
+        local function downloadTask()
+            local task_ok, task_result = xpcall(function()
+                local http = require("socket.http")
+                local socketutil = require("socketutil")
+                local active_acquisition = acquisition
+                local headers
+                if book.provider == "zlibrary" then
+                    local zlibrary = require("bookdrop_zlibrary_provider")
+                    local resolved, resolve_err = zlibrary.resolveDownload(book)
+                    if not resolved then error(resolve_err or "could not resolve a fresh download link") end
+                    active_acquisition = resolved
+                    headers = zlibrary.getDownloadHeaders(active_acquisition.referer)
+                else
+                    headers = {
+                        ["Accept-Encoding"] = "identity",
+                        ["User-Agent"] = "KOReader Bookdrop/0.7",
+                    }
+                    if active_acquisition.referer then headers.Referer = active_acquisition.referer end
+                end
+
                 local output, open_err = io.open(part_path, "wb")
                 if not output then error(open_err or "cannot create destination") end
                 socketutil:set_timeout(socketutil.LARGE_BLOCK_TIMEOUT, socketutil.LARGE_TOTAL_TIMEOUT)
-                local _, download_code = http.request{
-                    url = acquisition.url,
+                local request_ok, request_result, download_code, response_headers, status = pcall(http.request, {
+                    url = active_acquisition.url,
                     method = "GET",
                     redirect = true,
                     headers = headers,
-                    sink = ltn12.sink.file(output),
-                }
+                    sink = socketutil.file_sink(output),
+                })
                 socketutil:reset_timeout()
+                pcall(function() output:close() end)
+                if not request_ok then error(request_result) end
+                if not request_result then error(status or tostring(download_code)) end
                 if tonumber(download_code) ~= 200 then
-                    error("download server returned HTTP " .. tostring(download_code))
+                    error("download server returned HTTP " .. tostring(download_code)
+                        .. (status and (" (" .. tostring(status) .. ")") or ""))
                 end
-                if acquisition.md5 and acquisition.md5 ~= "" then
+                local content_type = response_headers
+                    and (response_headers["content-type"] or response_headers["Content-Type"])
+                if content_type and content_type:lower():find("text/html", 1, true) then
+                    error("download server returned a sign-in page instead of the book")
+                end
+                local downloaded = io.open(part_path, "rb")
+                local prefix = downloaded and (downloaded:read(512) or "") or ""
+                if downloaded then downloaded:close() end
+                local normalized_prefix = prefix:lower():gsub("^%s+", "")
+                if prefix == "" then
+                    error("download server returned an empty file")
+                elseif normalized_prefix:find("<html", 1, true)
+                    or normalized_prefix:find("<!doctype html", 1, true) then
+                    error("download server returned a sign-in page instead of the book")
+                end
+                if active_acquisition.md5 and active_acquisition.md5 ~= "" then
                     local md5 = require("ffi/MD5")
-                    if md5.sumFile(part_path) ~= acquisition.md5 then
+                    if md5.sumFile(part_path) ~= active_acquisition.md5 then
                         error("file integrity check failed")
                     end
                 end
                 if not os.rename(part_path, destination) then
                     error("could not save the completed file")
                 end
-            end)
-            if not ok then os.remove(part_path) end
-            return ok and "ok" or ("error:" .. tostring(err))
-        end, T(_("Downloading %1\n%2 · %3\n\nTap to pause or cancel."),
-            book.title, acquisition.format or _("EBOOK"), size_text), true)
+                return { success = true }
+            end, debug.traceback)
+            if not task_ok then
+                os.remove(part_path)
+                return { success = false, error = tostring(task_result) }
+            end
+            return task_result
+        end
+
+        local completed, result
+        if jit.os == "OSX" then
+            -- On the macOS emulator KOReader's Trapper-managed return pipe can
+            -- report a completed child with no payload after a successful TLS
+            -- transfer. The same task is reliable in-process. Real e-readers
+            -- keep the cancellable subprocess path below.
+            completed, result = true, downloadTask()
+        else
+            completed, result = Trapper:dismissableRunInSubprocess(downloadTask,
+                T(_("Downloading %1\n%2 · %3\n\nTap to pause or cancel."),
+                    book.title, acquisition.format or _("EBOOK"), size_text))
+        end
 
         if not completed then
             os.remove(part_path)
             UIManager:show(InfoMessage:new{ text = _("Download cancelled.") })
-        elseif result == "ok" then
+        elseif result and result.success then
             if self.ui and self.ui.onRefresh then self.ui:onRefresh() end
             UIManager:show(InfoMessage:new{
                 text = T(_("Downloaded successfully to:\n%1"), destination),
@@ -773,7 +933,7 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
         else
             UIManager:show(InfoMessage:new{
                 text = T(_("Download failed: %1"),
-                    tostring(result or "download ended unexpectedly"):gsub("^error:", "")),
+                    tostring(result and result.error or "download process exited without a result")),
             })
         end
     end)
@@ -862,6 +1022,26 @@ function Bookdrop:libraryDropdownEntries(home)
     return entries
 end
 
+function Bookdrop:uiLanguageDropdownEntries(home)
+    local entries = {
+        { text = "‹  " .. _("UI language"), bold = true,
+            callback = function() home:showSettings(self:settingsDropdownEntries(home)) end },
+    }
+    local current = G_reader_settings:readSetting("language") or "C"
+    for _, option in ipairs(ui_language_options) do
+        local locale, label = option[1], option[2]
+        entries[#entries + 1] = {
+            text = (current == locale and CHECKED or UNCHECKED) .. "  " .. label,
+            callback = function()
+                if (G_reader_settings:readSetting("language") or "C") ~= locale then
+                    Language:changeLanguage(locale)
+                end
+            end,
+        }
+    end
+    return entries
+end
+
 function Bookdrop:settingsDropdownEntries(home)
     local filters = self:getFilters()
     local format_count = selectedCount(filters.formats, format_options)
@@ -869,6 +1049,8 @@ function Bookdrop:settingsDropdownEntries(home)
     local content = selectedOptionLabel(content_options, filters.content or "") or _("All content")
     local language = selectedOptionLabel(language_options, filters.language or "") or _("All languages")
     local sort = selectedOptionLabel(sort_options, filters.sort or "") or _("Best match")
+    local ui_locale = G_reader_settings:readSetting("language") or "C"
+    local ui_language = Language:getLanguageName(ui_locale)
     local format_summary = format_count == #format_options and _("All")
         or T(_("%1 selected"), format_count)
     local library_summary = library_count == #library_options and _("All")
@@ -878,6 +1060,9 @@ function Bookdrop:settingsDropdownEntries(home)
         { text = _("Reset all filters"), callback = function()
             self:resetFilters()
             home:showSettings(self:settingsDropdownEntries(home))
+        end },
+        { text = _("UI language") .. "  ·  " .. ui_language .. "  ›", callback = function()
+            home:showSettings(self:uiLanguageDropdownEntries(home))
         end },
         { text = _("Content") .. "  ·  " .. content .. "  ›", callback = function()
             home:showSettings(self:choiceDropdownEntries(
@@ -1201,6 +1386,9 @@ function Bookdrop:showBook(book)
                 download_callback = hydrated.acquisitions and hydrated.acquisitions[1] and function(acquisition)
                     self:downloadBook(hydrated, acquisition)
                 end or nil,
+                cover_download_callback = function()
+                    self:downloadCover(hydrated)
+                end,
             })
         end)
     end)

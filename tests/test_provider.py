@@ -104,6 +104,9 @@ def python_json_decode(text):
 
 
 requested_bodies = []
+redirect_cookie_requests = []
+redirect_loop_requests = []
+unexpected_response_requests = []
 
 
 def python_http_request(arg):
@@ -116,6 +119,23 @@ def python_http_request(arg):
         requested_bodies.append(chunk if isinstance(chunk, str) else "")
     else:
         requested_bodies.append("")
+    if "redirect-cookie.test" in url:
+        cookie = arg["headers"]["Cookie"]
+        redirect_cookie_requests.append(cookie)
+        if not cookie or "challenge=passed" not in cookie:
+            return (True, 307, to_lua({
+                "location": url,
+                "set-cookie": "challenge=passed; Path=/; HttpOnly",
+            }), "Temporary Redirect")
+        arg["sink"](json.dumps(SEARCH_Z))
+        return (True, 200, to_lua({}), "OK")
+    if "redirect-loop.test" in url:
+        redirect_loop_requests.append(url)
+        return (True, 307, to_lua({"location": url}), "Temporary Redirect")
+    if "unexpected-response.test" in url:
+        unexpected_response_requests.append(url)
+        arg["sink"]("<html><title>Just a moment</title></html>")
+        return (True, 200, to_lua({"content-type": "text/html"}), "OK")
     for marker, body in ROUTES:
         if marker in url:
             arg["sink"](body)
@@ -134,6 +154,16 @@ lua.execute(
     package.preload["socket.url"] = function()
         return {
             escape = function(value) return value end,
+            absolute = function(base, location)
+                if location:match("^%a[%w+.-]*://") then return location end
+                local scheme, host = base:match("^(%a[%w+.-]*)://([^/]+)")
+                if not scheme or not host then return nil end
+                if location:sub(1, 2) == "//" then return scheme .. ":" .. location end
+                if location:sub(1, 1) == "/" then
+                    return scheme .. "://" .. host .. location
+                end
+                return base:match("^(.*)/") .. "/" .. location
+            end,
             parse = function(s)
                 local scheme, rest = s:match("^(%a[%w+.-]*)://(.*)$")
                 if not scheme then return nil end
@@ -292,6 +322,9 @@ lua.execute(
     zhydrated, zhydrated_err = zprovider:hydrate({
         provider_id = "42", hash = "abc123", title = "Crime and Punishment",
         author = "Fyodor Dostoevsky" })
+    zresolved, zresolved_err = zprovider.resolveDownload({
+        provider_id = "42", hash = "abc123", title = "Crime and Punishment",
+        format = "EPUB" })
     zprovider:signOut()
     zsignout, zsignout_err = zprovider:hydrate({
         provider_id = "42", hash = "abc123" })
@@ -310,6 +343,7 @@ assert zfirst["provider_id"] == "42"
 assert zfirst["hash"] == "abc123"
 assert zfirst["format"] == "EPUB"
 assert zfirst["cover_url"] == "https://z-lib.fo/covers/42.jpg"
+assert zfirst["cover_fallback_url"] == "https://covers.articles.sk/covers/42.jpg"
 assert zfirst["source"] == "Z-Library"
 assert zpage["total"] == 321
 assert zpage["has_next"] is True
@@ -329,6 +363,13 @@ assert lua.globals().zlogin_ok is True, f"login failed: {lua.globals().zlogin_er
 assert lua.globals().zsigned_in is True
 assert lua.globals().zcredentials["user_id"] == "123"
 assert lua.globals().zcredentials["user_key"] == "key456"
+lua.execute(r'''
+zprovider.saveCredentials("user@example.com", "secret", "123", "key456")
+zdownload_headers = zprovider.getDownloadHeaders("https://example.test/book")
+''')
+assert "remix_userid=123" in lua.globals().zdownload_headers["Cookie"]
+assert "remix_userkey=key456" in lua.globals().zdownload_headers["Cookie"]
+assert lua.globals().zdownload_headers["Referer"] == "https://example.test/book"
 
 zhydrated = lua.globals().zhydrated
 assert zhydrated is not None, f"hydrate failed: {lua.globals().zhydrated_err}"
@@ -338,6 +379,9 @@ assert zacquisitions[1]["url"] == "https://z-lib.fo/dl/42"
 assert zacquisitions[1]["extension"] == "epub"
 assert zacquisitions[1]["format"] == "EPUB"
 assert zacquisitions[1]["referer"].endswith("/eapi/book/42/abc123")
+assert lua.globals().zresolved is not None, lua.globals().zresolved_err
+assert lua.globals().zresolved["url"] == "https://z-lib.fo/dl/42"
+assert lua.globals().zresolved["referer"].endswith("/eapi/book/42/abc123")
 
 assert lua.globals().zsignout is None
 assert "sign-in" in lua.globals().zsignout_err.lower()
@@ -363,6 +407,43 @@ assert lua.globals().zisolated_creds["user_id"] == "7"
 assert lua.globals().zisolated_creds["user_key"] == "key7"
 assert lua.globals().zisolated_signed_in is True
 
+# A mirror may redirect a POST back to the same URL while setting a short-lived
+# challenge cookie. The client must return that cookie instead of exhausting
+# its redirect budget.
+lua.execute(
+    r'''
+    zprovider.setBaseUrl("https://redirect-cookie.test")
+    zcookie_page, zcookie_err = zprovider:search("cookie", 1, {})
+    '''
+)
+assert lua.globals().zcookie_page is not None, lua.globals().zcookie_err
+assert len(redirect_cookie_requests) == 2
+assert not redirect_cookie_requests[0] or "challenge=passed" not in redirect_cookie_requests[0]
+assert "challenge=passed" in redirect_cookie_requests[1]
+
+# A genuine same-URL loop has no new cookie and should immediately advance to
+# another seed rather than surfacing "Too many redirects" as a catalog error.
+lua.execute(
+    r'''
+    zprovider.setBaseUrl("https://redirect-loop.test")
+    zloop_page, zloop_err = zprovider:search("loop", 1, {})
+    '''
+)
+assert lua.globals().zloop_page is not None, lua.globals().zloop_err
+assert len(redirect_loop_requests) == 1
+assert lua.globals().zprovider.getBaseUrl() != "https://redirect-loop.test"
+
+# A host can be reachable while returning a landing page or bot challenge
+# instead of the JSON API. That host is not usable and must not stop fallback.
+lua.execute(
+    r'''
+    zprovider.setBaseUrl("https://unexpected-response.test")
+    zhtml_page, zhtml_err = zprovider:search("html", 1, {})
+    '''
+)
+assert lua.globals().zhtml_page is not None, lua.globals().zhtml_err
+assert len(unexpected_response_requests) == 1
+
 print(f"parsed {len(books)} catalog records with cover metadata")
 print(f"hydrated {len(acquisitions)} public acquisitions; "
       f"restricted item rejected: {restricted is None}")
@@ -370,3 +451,5 @@ print(f"z-library: searched, signed in, hydrated {len(zacquisitions)} acquisitio
       f"sign-out blocks hydrate: {lua.globals().zsignout is None}")
 print(f"z-library credentials survive a settings flush: "
       f"{lua.globals().zisolated_signed_in}")
+print("z-library redirect cookies retained; true loops fall back immediately")
+print("z-library non-JSON responses fall back to another mirror")

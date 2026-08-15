@@ -27,6 +27,7 @@ local BookView = InputContainer:extend{
     modal = true,
     book = nil,
     download_callback = nil,
+    cover_download_callback = nil,
 }
 
 local function join(values)
@@ -272,6 +273,25 @@ function BookView:init()
         }
     end
 
+    local cover_download = self.cover_download_callback and VerticalGroup:new{
+        VerticalSpan:new{ width = gap },
+        TextBoxWidget:new{
+            text = _("Cover image"), width = content_w,
+            face = Font:getFace("cfont", 18), bold = true,
+        },
+        VerticalSpan:new{ width = Size.padding.default },
+        Button:new{
+            text = _("DOWNLOAD COVER"),
+            width = content_w,
+            height = Screen:scaleBySize(48),
+            callback = function() self.cover_download_callback() end,
+            bordersize = Size.border.thin,
+            radius = 0,
+            preselect = true,
+            show_parent = self,
+        },
+    } or VerticalSpan:new{ width = 0 }
+
     local fact_gap = Size.padding.large
     local fact_w = math.floor((content_w - 2 * fact_gap) / 3)
     local function fact(label, value)
@@ -304,6 +324,7 @@ function BookView:init()
         separator(),
         VerticalSpan:new{ width = gap },
         availability,
+        cover_download,
         VerticalSpan:new{ width = gap },
         separator(),
         VerticalSpan:new{ width = gap },

@@ -30,7 +30,7 @@ local ZlibraryProvider = {
     timeout = { 10, 20 },
     -- Short timeout used while probing fallback mirrors: a live mirror answers
     -- fast, and a dead one must not stall the whole catalog search.
-    probe_timeout = { 5, 8 },
+    probe_timeout = { 3, 5 },
 }
 
 local USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
@@ -39,17 +39,18 @@ local USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l
 -- operator rotates these; a dead one is changed in Bookdrop settings (or the
 -- provider falls through to the next seed when the configured URL fails).
 local SEED_URLS = {
+    "https://articles.sk/",
+    "https://z-library.ec/",
+    "https://article.sk/",
+    "https://z-lib.sk/",
     "https://z-library.sk/",
+    "https://1lib.sk/",
     "https://z-lib.gl/",
     "https://z-lib.fm/",
     "https://z-lib.gd/",
+    "https://z-lib.bz/",
     "https://z-lib.fo/",
-    "https://library-oceania.sk/",
-    "https://library-latin.sk/",
-    "https://library-asia.sk/",
-    "https://lib-africa.sk/",
     "https://z-library.do/",
-    "https://1lib.sk/",
     "https://z-library.rs/",
     "https://z-lib.do/",
     "https://z-lib.gs/",
@@ -81,6 +82,7 @@ local SETTINGS_EMAIL_KEY = "zlibrary_email"
 local SETTINGS_PASSWORD_KEY = "zlibrary_password"
 local SETTINGS_USER_ID_KEY = "zlib_user_id"
 local SETTINGS_USER_KEY_KEY = "zlib_user_key"
+local _working_base_url = nil
 
 -- ---------------------------------------------------------------- settings
 
@@ -99,6 +101,7 @@ local function settings()
 end
 
 function ZlibraryProvider.getBaseUrl()
+    if _working_base_url then return _working_base_url end
     local configured = settings():readSetting(SETTINGS_BASE_URL_KEY)
     if configured and configured ~= "" then
         return configured:gsub("/$", "")
@@ -126,6 +129,7 @@ function ZlibraryProvider.setBaseUrl(url_string)
     end
     settings():saveSetting(SETTINGS_BASE_URL_KEY, url_string)
     settings():flush()
+    _working_base_url = nil
     return true, nil
 end
 
@@ -162,6 +166,23 @@ function ZlibraryProvider.signOut()
     storage:flush()
 end
 
+-- Headers required by the final signed download URL. Keep these out of the
+-- acquisition record because recent books are persisted to disk and must not
+-- contain session credentials.
+function ZlibraryProvider.getDownloadHeaders(referer)
+    local credentials = ZlibraryProvider.getCredentials()
+    local headers = {
+        ["Accept-Encoding"] = "identity",
+        ["User-Agent"] = USER_AGENT,
+    }
+    if credentials.user_id and credentials.user_key then
+        headers.Cookie = string.format("remix_userid=%s; remix_userkey=%s",
+            credentials.user_id, credentials.user_key)
+    end
+    if referer and referer ~= "" then headers.Referer = referer end
+    return headers
+end
+
 -- ---------------------------------------------------------------- http
 
 local function authedHeaders(user_id, user_key, body)
@@ -179,14 +200,51 @@ local function authedHeaders(user_id, user_key, body)
     return headers
 end
 
--- One request with bounded redirect following (the operator redirects mirror
--- hosts to their live domain; socket.http's own redirect would not re-issue a
--- POST body correctly, so the hop is done by hand, like the upstream plugin).
+local COOKIE_ATTRIBUTES = {
+    expires = true, ["max-age"] = true, domain = true, path = true,
+    secure = true, httponly = true, samesite = true, partitioned = true,
+    priority = true, version = true, comment = true,
+}
+
+local function rememberRedirectCookies(cookie_jar, request_url, response_headers)
+    local raw = type(response_headers) == "table"
+        and (response_headers["set-cookie"] or response_headers["Set-Cookie"])
+    if type(raw) ~= "string" or raw == "" then return false end
+    local parsed = url.parse(request_url or "")
+    if not (parsed and parsed.host) then return false end
+    local cookies = cookie_jar[parsed.host] or {}
+    cookie_jar[parsed.host] = cookies
+    local learned = false
+    for name, value in raw:gmatch("([^%s;,=]+)%s*=%s*([^;,]*)") do
+        if not COOKIE_ATTRIBUTES[name:lower()] and cookies[name] ~= value then
+            cookies[name] = value
+            learned = true
+        end
+    end
+    return learned
+end
+
+local function headersWithRedirectCookies(headers, request_url, cookie_jar)
+    local parsed = url.parse(request_url or "")
+    local cookies = parsed and parsed.host and cookie_jar[parsed.host]
+    if not cookies or not next(cookies) then return headers end
+    local updated, parts = {}, {}
+    for key, value in pairs(headers or {}) do updated[key] = value end
+    if updated.Cookie and updated.Cookie ~= "" then parts[#parts + 1] = updated.Cookie end
+    for name, value in pairs(cookies) do parts[#parts + 1] = name .. "=" .. value end
+    updated.Cookie = table.concat(parts, "; ")
+    return updated
+end
+
+-- One request with bounded redirect following. Some mirrors use a 307 redirect
+-- back to the same URL as a cookie challenge, so cookies set by each hop must
+-- be returned on the next request or the redirect repeats forever.
 local function httpRequest(url_string, method, headers, body, timeout)
     timeout = timeout or ZlibraryProvider.timeout
-    local hops = 0
-    while hops < 3 do
+    local hops, cookie_jar, seen = 0, {}, {}
+    while hops < 5 do
         hops = hops + 1
+        seen[url_string] = true
         local chunks, received, too_large = {}, 0, false
         local sink = function(chunk)
             if chunk then
@@ -204,7 +262,7 @@ local function httpRequest(url_string, method, headers, body, timeout)
         local ok, code, response_headers, _, status = http.request{
             url = url_string,
             method = method or "GET",
-            headers = headers,
+            headers = headersWithRedirectCookies(headers, url_string, cookie_jar),
             source = body and ltn12.source.string(body) or nil,
             sink = sink,
         }
@@ -215,17 +273,19 @@ local function httpRequest(url_string, method, headers, body, timeout)
         local response_body = table.concat(chunks)
 
         if not ok or tonumber(code) ~= 200 then
-            local location = response_headers and response_headers.location
+            local location = response_headers
+                and (response_headers.location or response_headers.Location)
             if location and code and tonumber(code) >= 300 and tonumber(code) < 400 then
-                -- Resolve relative redirects against the current URL.
-                local parsed = url.parse(location)
-                if not (parsed and parsed.host) then
-                    local base = url.parse(url_string)
-                    if base then
-                        location = (base.scheme or "https") .. "://" .. base.host .. location
-                    end
+                local redirect_url = url.absolute(url_string, location)
+                if not redirect_url then
+                    return nil, "Z-Library returned an invalid redirect", true
                 end
-                url_string = location
+                local learned_cookie = rememberRedirectCookies(
+                    cookie_jar, url_string, response_headers)
+                if seen[redirect_url] and not learned_cookie then
+                    return nil, "Z-Library mirror is stuck in a redirect loop", true
+                end
+                url_string = redirect_url
             elseif not ok or tonumber(code) == nil then
                 -- Transport-level failure (timeout, connection reset, DNS...).
                 -- code holds the LuaSocket error string, not an HTTP status.
@@ -252,7 +312,7 @@ local function httpRequest(url_string, method, headers, body, timeout)
             return response_body, nil, false
         end
     end
-    return nil, "Too many redirects", false
+    return nil, "Z-Library mirror is stuck in a redirect loop", true
 end
 
 -- GET/POST that returns the parsed JSON payload (or nil, err, transport_error).
@@ -261,17 +321,17 @@ local function requestJson(url_string, method, headers, body, timeout)
     if not response_body then return nil, err, transport_error end
     local ok, payload = pcall(json.decode, response_body, json.decode.simple)
     if not ok or type(payload) ~= "table" then
-        -- The mirror answered but not with JSON (e.g. a rate-limit page).
-        -- Not a transport failure: don't fall back to the next mirror.
-        return nil, "Z-Library returned an unexpected response", false
+        -- The host answered, but it is a landing page, rate-limit page or bot
+        -- challenge rather than the JSON API. Another mirror can still work.
+        return nil, "Z-Library returned an unexpected response", true
     end
     return payload, nil, false
 end
 
--- Make a request, falling back to the next seed URL only when the previous one
--- failed at the transport level (timeout, DNS, reset).  A mirror that answers
--- — even with an error payload or a rate-limit page — stops the loop, because
--- that host is reachable and trying more mirrors would only waste time.
+-- Make a request, falling back to the next seed URL when the previous one
+-- failed at the transport level, is stuck in a redirect loop, or returned a
+-- landing/bot-check page instead of the JSON API. A valid API error stops the
+-- loop because another mirror would return the same application-level answer.
 --
 -- Seed probes use a short timeout so a dead mirror fails fast instead of
 -- stalling the whole (blocking) catalog search.  Only the user's configured
@@ -289,6 +349,7 @@ local function requestWithSeedFallback(path, method, headers, body)
         end
     end
     local configured = settings():readSetting(SETTINGS_BASE_URL_KEY)
+    add(_working_base_url)
     add(configured)
     for _, seed in ipairs(SEED_URLS) do add(seed) end
 
@@ -296,10 +357,17 @@ local function requestWithSeedFallback(path, method, headers, body)
     local max_attempts = configured and (1 + 3) or 4
     for index, base in ipairs(bases) do
         if index > max_attempts then break end
-        local timeout = (configured and index == 1)
-            and ZlibraryProvider.timeout or ZlibraryProvider.probe_timeout
-        local payload, err, transport_error = requestJson(base .. path, method, headers, body, timeout)
+        local payload, err, transport_error = requestJson(
+            base .. path, method, headers, body, ZlibraryProvider.probe_timeout)
         if payload then
+            -- Keep every later search/detail request on the mirror that just
+            -- proved it serves the JSON API. This avoids re-probing a stale
+            -- configured address on every user action or app restart.
+            _working_base_url = base
+            if base ~= configured then
+                settings():saveSetting(SETTINGS_BASE_URL_KEY, base)
+                settings():flush()
+            end
             -- Third return value: the full URL that worked, for callers that
             -- need a referer on the same host (e.g. the download request).
             return payload, nil, base .. path
@@ -367,6 +435,12 @@ local function usableCoverUrl(cover)
     return cover
 end
 
+local function fallbackCoverUrl(cover)
+    local path = type(cover) == "string" and cover:match("^https://[^/]+(/.+)$")
+    if not path or cover:find("covers.articles.sk", 1, true) then return nil end
+    return "https://covers.articles.sk" .. path
+end
+
 local function bookFromApi(api_book, page)
     if not api_book or not api_book.id then return nil end
     local extension = scalar(api_book.extension, "")
@@ -385,6 +459,7 @@ local function bookFromApi(api_book, page)
         rating = scalar(api_book.interestScore, nil),
         description = scalar(api_book.description, nil),
         cover_url = usableCoverUrl(api_book.cover),
+        cover_fallback_url = fallbackCoverUrl(usableCoverUrl(api_book.cover)),
         source = "Z-Library",
         acquisitions = {},
     }
@@ -455,6 +530,42 @@ function ZlibraryProvider:search(query, page, filters)
     }
 end
 
+-- Resolve the short-lived signed file URL immediately before transfer, as the
+-- upstream plugin does. Resolving it while opening the details screen leaves a
+-- link that may be stale by the time the user taps Download.
+function ZlibraryProvider.resolveDownload(book)
+    if not book or not book.provider_id or not book.hash then
+        return nil, "Book identifiers missing"
+    end
+    local credentials = ZlibraryProvider.getCredentials()
+    if not credentials.user_id or not credentials.user_key then
+        return nil, "Z-Library sign-in required to download. Sign in in Bookdrop settings."
+    end
+    local link_path = string.format("/eapi/book/%s/%s/file", book.provider_id, book.hash)
+    local link_result, link_err, link_url = requestWithSeedFallback(link_path, "GET",
+        authedHeaders(credentials.user_id, credentials.user_key))
+    if not link_result then return nil, link_err end
+    if tonumber(link_result.success) ~= 1 or not link_result.file then
+        return nil, link_result.message or "Z-Library could not resolve a download link."
+    end
+    local file_data = link_result.file
+    if not file_data.downloadLink then
+        if file_data.allowDownload == false then
+            return nil, "Download limit reached. Please try again later or check your account."
+        end
+        return nil, "No download link provided."
+    end
+    local extension = file_data.extension
+        or (book.format and book.format ~= "EBOOK" and book.format:lower()) or "epub"
+    return {
+        url = file_data.downloadLink,
+        extension = extension,
+        format = extension:upper(),
+        size = book.filesize,
+        referer = link_url and link_url:gsub("/file$", "") or nil,
+    }
+end
+
 -- Bookdrop provider interface: hydrate(book) -> enriched book (or nil, err).
 -- Resolves the download link, which requires a signed-in session.
 function ZlibraryProvider:hydrate(book)
@@ -467,8 +578,6 @@ function ZlibraryProvider:hydrate(book)
     end
 
     local details_path = string.format("/eapi/book/%s/%s", book.provider_id, book.hash)
-    local link_path = string.format("/eapi/book/%s/%s/file", book.provider_id, book.hash)
-
     local details, err, details_url = requestWithSeedFallback(details_path, "GET", authedHeaders(credentials.user_id, credentials.user_key))
     if not details then return nil, err end
     if tonumber(details.success) ~= 1 or not details.book then
@@ -483,33 +592,15 @@ function ZlibraryProvider:hydrate(book)
         book.available_formats = api_book.extension:upper()
     end
     if api_book.filesizeString then book.size = scalar(api_book.filesizeString, nil) end
+    book.filesize = tonumber(api_book.filesize)
 
-    local link_result, link_err = requestWithSeedFallback(link_path, "GET",
-        authedHeaders(credentials.user_id, credentials.user_key))
-    if not link_result then return nil, link_err end
-    if tonumber(link_result.success) ~= 1 or not link_result.file then
-        return nil, link_result.message or "Z-Library could not resolve a download link."
-    end
-
-    local file_data = link_result.file
-    local download_link = file_data.downloadLink
-    if not download_link then
-        if file_data.allowDownload == false then
-            return nil, "Download limit reached. Please try again later or check your account."
-        end
-        return nil, "No download link provided."
-    end
-
-    local extension = file_data.extension or (book.format ~= "EBOOK" and book.format:lower()) or "epub"
-    book.format = extension:upper()
-    book.available_formats = extension:upper()
-    book.acquisitions = {{
-        url = download_link,
-        extension = extension,
-        format = extension:upper(),
-        size = api_book.filesize,
-        referer = details_url,
-    }}
+    local acquisition, link_err = ZlibraryProvider.resolveDownload(book)
+    if not acquisition then return nil, link_err end
+    acquisition.size = api_book.filesize
+    acquisition.referer = acquisition.referer or details_url
+    book.format = acquisition.format
+    book.available_formats = acquisition.format
+    book.acquisitions = { acquisition }
     return book
 end
 
