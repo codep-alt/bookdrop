@@ -36,16 +36,17 @@ local USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, l
 -- operator rotates these; a dead one is changed in Bookdrop settings (or the
 -- provider falls through to the next seed when the configured URL fails).
 local SEED_URLS = {
+    "https://z-library.sk/",
+    "https://z-lib.gl/",
+    "https://z-lib.fm/",
+    "https://z-lib.gd/",
     "https://z-lib.fo/",
     "https://library-oceania.sk/",
     "https://library-latin.sk/",
-    "https://z-lib.fm/",
     "https://library-asia.sk/",
     "https://lib-africa.sk/",
     "https://z-library.do/",
-    "https://z-lib.gd/",
     "https://1lib.sk/",
-    "https://z-lib.gl/",
     "https://z-library.rs/",
     "https://z-lib.do/",
     "https://z-lib.gs/",
@@ -158,34 +159,6 @@ function ZlibraryProvider.signOut()
     storage:flush()
 end
 
--- ---------------------------------------------------------------- url builders
-
-local function baseUrl()
-    return ZlibraryProvider.getBaseUrl()
-end
-
-local function loginUrl()
-    local base = baseUrl()
-    return base and (base .. "/eapi/user/login") or nil
-end
-
-local function searchUrl()
-    local base = baseUrl()
-    return base and (base .. "/eapi/book/search") or nil
-end
-
-local function bookDetailsUrl(book_id, book_hash)
-    local base = baseUrl()
-    if not base or not book_id or not book_hash then return nil end
-    return string.format("%s/eapi/book/%s/%s", base, book_id, book_hash)
-end
-
-local function downloadLinkUrl(book_id, book_hash)
-    local base = baseUrl()
-    if not base or not book_id or not book_hash then return nil end
-    return string.format("%s/eapi/book/%s/%s/file", base, book_id, book_hash)
-end
-
 -- ---------------------------------------------------------------- http
 
 local function authedHeaders(user_id, user_key, body)
@@ -287,25 +260,52 @@ local function requestJson(url_string, method, headers, body)
     return payload
 end
 
+-- Make a request, falling back through every seed URL when the configured
+-- (or first) base is unreachable.  Transport failures (timeout, DNS, reset)
+-- advance to the next seed; a live API answer — even an error payload — stops
+-- the loop, since that host is reachable and the error is a real one.
+local function requestWithSeedFallback(path, method, headers, body)
+    local bases = {}
+    local seen = {}
+    local function add(base)
+        if base and base ~= "" then
+            local cleaned = base:gsub("/$", "")
+            if not seen[cleaned] then
+                seen[cleaned] = true
+                bases[#bases + 1] = cleaned
+            end
+        end
+    end
+    add(settings():readSetting(SETTINGS_BASE_URL_KEY))
+    for _, seed in ipairs(SEED_URLS) do add(seed) end
+
+    local last_err = "All Z-Library mirrors are unreachable"
+    for _, base in ipairs(bases) do
+        local payload, err = requestJson(base .. path, method, headers, body)
+        if payload then
+            return payload, nil
+        end
+        last_err = err
+    end
+    return nil, last_err
+end
+
 -- ---------------------------------------------------------------- api
 
 -- Signs in and stores the session. Returns true, or nil, err.
 function ZlibraryProvider.login(email, password)
-    local url_string = loginUrl()
-    if not url_string then
-        return nil, "Z-Library base URL is not set."
-    end
     local body_parts = {}
     for key, value in pairs({ email = email or "", password = password or "" }) do
         body_parts[#body_parts + 1] = util.urlEncode(key) .. "=" .. util.urlEncode(value)
     end
-    local payload, err = requestJson(url_string, "POST", {
+    local body = table.concat(body_parts, "&")
+    local payload, err = requestWithSeedFallback("/eapi/user/login", "POST", {
         ["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8",
         ["Accept"] = "application/json, text/javascript, */*; q=0.01",
         ["User-Agent"] = USER_AGENT,
         ["X-Requested-With"] = "XMLHttpRequest",
-        ["Content-Length"] = tostring(#table.concat(body_parts, "&")),
-    }, table.concat(body_parts, "&"))
+        ["Content-Length"] = tostring(#body),
+    }, body)
     if not payload then return nil, err end
 
     if tonumber(payload.success) ~= 1 then
@@ -370,10 +370,6 @@ end
 -- Bookdrop provider interface: search(query, page, filters) ->
 -- { books, total, page, has_previous, has_next } or nil, err.
 function ZlibraryProvider:search(query, page, filters)
-    local url_string = searchUrl()
-    if not url_string then
-        return nil, "Z-Library base URL is not set. Configure it in Bookdrop settings."
-    end
     filters = filters or {}
     local current_page = math.max(1, tonumber(page) or 1)
 
@@ -402,7 +398,7 @@ function ZlibraryProvider:search(query, page, filters)
     end
 
     local body = table.concat(body_parts, "&")
-    local payload, err = requestJson(url_string, "POST",
+    local payload, err = requestWithSeedFallback("/eapi/book/search", "POST",
         authedHeaders(credentials.user_id, credentials.user_key, body), body)
     if not payload then return nil, err end
 
@@ -445,13 +441,10 @@ function ZlibraryProvider:hydrate(book)
         return nil, "Z-Library sign-in required to download. Sign in in Bookdrop settings."
     end
 
-    local details_url = bookDetailsUrl(book.provider_id, book.hash)
-    local link_url = downloadLinkUrl(book.provider_id, book.hash)
-    if not details_url or not link_url then
-        return nil, "Z-Library base URL is not set."
-    end
+    local details_path = string.format("/eapi/book/%s/%s", book.provider_id, book.hash)
+    local link_path = string.format("/eapi/book/%s/%s/file", book.provider_id, book.hash)
 
-    local details, err = requestJson(details_url, "GET", authedHeaders(credentials.user_id, credentials.user_key))
+    local details, err = requestWithSeedFallback(details_path, "GET", authedHeaders(credentials.user_id, credentials.user_key))
     if not details then return nil, err end
     if tonumber(details.success) ~= 1 or not details.book then
         return nil, details.message or "Z-Library could not load this book's details."
@@ -466,7 +459,7 @@ function ZlibraryProvider:hydrate(book)
     end
     if api_book.filesizeString then book.size = scalar(api_book.filesizeString, nil) end
 
-    local link_result, link_err = requestJson(link_url, "GET",
+    local link_result, link_err = requestWithSeedFallback(link_path, "GET",
         authedHeaders(credentials.user_id, credentials.user_key))
     if not link_result then return nil, link_err end
     if tonumber(link_result.success) ~= 1 or not link_result.file then
