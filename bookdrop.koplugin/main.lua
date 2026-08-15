@@ -22,12 +22,8 @@ local T = require("ffi/util").template
 
 local Bookdrop = WidgetContainer:extend{ name = "bookdrop", settings = nil }
 local function showKeyboard(dialog)
-    -- On devices with a physical keyboard (macOS emulator), skip the
-    -- virtual keyboard to avoid stealing input focus.
-    if not Device:hasKeyboard() then
-        dialog.skip_first_show_keyboard = nil
-        dialog:onShowKeyboard()
-    end
+    dialog.skip_first_show_keyboard = nil
+    dialog:onShowKeyboard()
 end
 local CHECKED = "✓"
 local UNCHECKED = "□"
