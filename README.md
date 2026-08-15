@@ -4,21 +4,47 @@ All-in-one reading for [KOReader](https://koreader.rocks/) — discover, search,
 
 [![Ko-fi](https://img.shields.io/badge/Support-ko--fi-FF5E5B?logo=kofi&logoColor=white)](https://ko-fi.com/davidc465)
 
-## Preview
+## Installation
 
-Screenshots and a short walkthrough video are coming soon.
+1. Download `Bookdrop-latest.zip` from the [latest GitHub release](https://github.com/codep-alt/bookdrop/releases/latest).
+2. Extract the ZIP and copy the resulting `bookdrop.koplugin` folder into KOReader's `plugins` directory.
+3. Confirm the final path is `koreader/plugins/bookdrop.koplugin/main.lua`, without an extra nested folder.
+4. Restart KOReader.
+5. Open KOReader's main menu and select **Bookdrop store**.
 
-<!--
-Suggested files when the media is ready:
+An internet connection is required for live catalogs and downloads. The curated landing page and previously cached covers can still be displayed offline.
 
-docs/images/home.png
-docs/images/search-results.png
-docs/images/book-details.png
-docs/images/manga.png
+## Screenshots
 
-After uploading them, add the images here together with a YouTube, PeerTube,
-or direct walkthrough-video link.
--->
+### Open Bookdrop from KOReader
+
+<p align="center">
+  <img src="Images/bookdrop-menu-entry.png" alt="Bookdrop store entry in the KOReader main menu" width="760">
+</p>
+
+### Browse and configure the catalog
+
+<table>
+  <tr>
+    <td align="center"><img src="Images/bookdrop-home-wide.png" alt="Bookdrop curated home screen"><br><sub>Curated home and categories</sub></td>
+    <td align="center"><img src="Images/bookdrop-settings.png" alt="Bookdrop settings menu"><br><sub>Settings and Z-Library account</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="Images/library-filter.png" alt="Bookdrop library filter"><br><sub>Choose catalog libraries</sub></td>
+    <td align="center"><img src="Images/format-filter.png" alt="Bookdrop format filter"><br><sub>Choose download formats</sub></td>
+  </tr>
+</table>
+
+### Search books and manga
+
+<table>
+  <tr>
+    <td align="center"><img src="Images/book-search-cover-results.png" alt="Bookdrop book results in cover view"><br><sub>Book results in cover view</sub></td>
+    <td align="center"><img src="Images/manga-search-results.png" alt="Bookdrop manga search results"><br><sub>Manga search results</sub></td>
+  </tr>
+</table>
+
+A short walkthrough video will be added later.
 
 ## Features
 
@@ -79,16 +105,6 @@ The Manga tab bundles the RakuYomi interface and seven ready-to-use sources:
 More sources can be installed from the Aidoku community catalog inside the app.
 
 The manga reader requires a small RakuYomi runtime (approximately 25 MB). The first time the Manga tab is opened, Bookdrop detects the platform and offers to download the matching runtime. This is a one-time download and can be retried or postponed.
-
-## Installation
-
-1. Download the latest `Bookdrop-latest.zip` release.
-2. Extract it and copy the resulting `bookdrop.koplugin` folder into KOReader's `plugins` directory.
-3. Confirm the final path is `koreader/plugins/bookdrop.koplugin/main.lua`, without an extra nested folder.
-4. Restart KOReader.
-5. Open **Bookdrop store** from KOReader's main menu.
-
-An internet connection is required for live catalogs and downloads. The curated landing page and previously cached covers can still be displayed offline.
 
 ## Settings
 
