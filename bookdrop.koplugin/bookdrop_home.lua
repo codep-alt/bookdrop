@@ -12,6 +12,7 @@ local ImageWidget = require("ui/widget/imagewidget")
 local InputContainer = require("ui/widget/container/inputcontainer")
 local LineWidget = require("ui/widget/linewidget")
 local OverlapGroup = require("ui/widget/overlapgroup")
+local QRWidget = require("ui/widget/qrwidget")
 local ScrollableContainer = require("ui/widget/container/scrollablecontainer")
 local Size = require("ui/size")
 local TextBoxWidget = require("ui/widget/textboxwidget")
@@ -183,6 +184,79 @@ function BookTile:onTapBook()
     return true
 end
 
+local DonationDialog = InputContainer:extend{
+    modal = true,
+}
+
+function DonationDialog:init()
+    local screen_w, screen_h = Screen:getWidth(), Screen:getHeight()
+    if Device:hasKeys() then self.key_events.Close = { { Device.input.group.Back } } end
+    self.ges_events = {
+        TapClose = {
+            GestureRange:new{ ges = "tap", range = Geom:new{ x = 0, y = 0, w = screen_w, h = screen_h } },
+        },
+    }
+
+    local qr_size = math.floor(math.min(screen_w, screen_h) * 0.5)
+    local text_w = math.floor(screen_w * 0.8)
+
+    local content = VerticalGroup:new{
+        align = "center",
+        TextBoxWidget:new{
+            text = _("Enjoying Bookdrop?\nScan the code with your phone to support the project."),
+            alignment = "center",
+            face = Font:getFace("cfont", 16),
+            width = text_w,
+        },
+        VerticalSpan:new{ width = Screen:scaleBySize(24) },
+        QRWidget:new{
+            text = "https://ko-fi.com/davidc465",
+            width = qr_size,
+            height = qr_size,
+        },
+        VerticalSpan:new{ width = Screen:scaleBySize(12) },
+        TextBoxWidget:new{
+            text = "ko-fi.com/davidc465",
+            alignment = "center",
+            face = Font:getFace("cfont", 13),
+            width = text_w,
+        },
+        VerticalSpan:new{ width = Screen:scaleBySize(24) },
+        TextBoxWidget:new{
+            text = _("Tap anywhere to close"),
+            alignment = "center",
+            face = Font:getFace("cfont", 12),
+            width = text_w,
+        },
+    }
+
+    self[1] = CenterContainer:new{
+        dimen = Geom:new{ x = 0, y = 0, w = screen_w, h = screen_h },
+        FrameContainer:new{
+            background = Blitbuffer.COLOR_WHITE,
+            padding = Screen:scaleBySize(24),
+            bordersize = 0,
+            radius = Size.radius.window,
+            content,
+        },
+    }
+end
+
+function DonationDialog:onTapClose()
+    UIManager:close(self)
+    return true
+end
+
+function DonationDialog:onShow()
+    UIManager:setDirty(self, "ui")
+    return true
+end
+
+function DonationDialog:onClose()
+    UIManager:close(self)
+    return true
+end
+
 local StoreHome = InputContainer:extend{
     name = "bookdrop_home",
     covers_fullscreen = true,
@@ -273,6 +347,29 @@ function StoreHome:showSettings(entries)
         top = self.title_bar:getSize().h + Screen:scaleBySize(40),
         align_right = true,
     })
+end
+
+function StoreHome:showDonation()
+    UIManager:show(DonationDialog:new{})
+end
+
+function StoreHome:donationBanner(width)
+    local banner_h = Screen:scaleBySize(38)
+    return CenterContainer:new{
+        dimen = Geom:new{ w = width, h = banner_h },
+        Button:new{
+            text = _("♥  Support Bookdrop  ·  ko-fi.com/davidc465"),
+            width = width,
+            height = banner_h,
+            bordersize = 0,
+            radius = Size.radius.button,
+            background = Blitbuffer.COLOR_LIGHT_GRAY,
+            text_font_size = 13,
+            text_font_bold = true,
+            callback = function() self:showDonation() end,
+            show_parent = self,
+        },
+    }
 end
 
 function StoreHome:bookShelf(title, books, callback, width)
@@ -378,6 +475,10 @@ function StoreHome:init()
         self:rule(content_w),
         VerticalSpan:new{ width = section_gap },
     }
+
+    content[#content + 1] = self:donationBanner(content_w)
+    content[#content + 1] = VerticalSpan:new{ width = section_gap }
+    content[#content + 1] = self:rule(content_w)
 
     if #self.featured_books > 0 then
         content[#content + 1] = self:bookShelf(
