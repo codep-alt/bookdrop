@@ -27,7 +27,7 @@ local ZlibraryProvider = {
     name = "Z-Library",
     page_size = 10,
     max_response_bytes = 4 * 1024 * 1024,
-    timeout = { 15, 30 },
+    timeout = { 30, 60 },
 }
 
 local USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
@@ -249,6 +249,17 @@ local function httpRequest(url_string, method, headers, body)
                     end
                 end
                 url_string = location
+            elseif not ok or tonumber(code) == nil then
+                -- Transport-level failure (timeout, connection reset, DNS...).
+                -- code holds the LuaSocket error string, not an HTTP status.
+                local msg = tostring(code)
+                if msg:find("timeout") or msg:find("wantread") or msg:find("wantwrite") then
+                    return nil, "Z-Library did not respond in time"
+                elseif msg:find("closed") or msg:find("reset") then
+                    return nil, "Connection to Z-Library was interrupted"
+                else
+                    return nil, "Could not reach Z-Library: " .. msg
+                end
             else
                 -- Z-Library often returns non-200 with a JSON error body
                 -- (e.g. HTTP 400 + {"success":0,"error":"..."}).  Return the
