@@ -210,7 +210,7 @@ local function httpRequest(url_string, method, headers, body, timeout)
         }
         socketutil:reset_timeout()
 
-        if too_large then return nil, "Z-Library response exceeded 4 MiB" end
+        if too_large then return nil, "Z-Library response exceeded 4 MiB", false end
 
         local response_body = table.concat(chunks)
 
@@ -229,49 +229,53 @@ local function httpRequest(url_string, method, headers, body, timeout)
             elseif not ok or tonumber(code) == nil then
                 -- Transport-level failure (timeout, connection reset, DNS...).
                 -- code holds the LuaSocket error string, not an HTTP status.
+                -- Third return value marks this as a transport error so the
+                -- seed fallback can advance to the next mirror.
                 local msg = tostring(code)
                 if msg:find("timeout") or msg:find("wantread") or msg:find("wantwrite") then
-                    return nil, "Z-Library did not respond in time"
+                    return nil, "Z-Library did not respond in time", true
                 elseif msg:find("closed") or msg:find("reset") then
-                    return nil, "Connection to Z-Library was interrupted"
+                    return nil, "Connection to Z-Library was interrupted", true
                 else
-                    return nil, "Could not reach Z-Library: " .. msg
+                    return nil, "Could not reach Z-Library: " .. msg, true
                 end
             else
                 -- Z-Library often returns non-200 with a JSON error body
                 -- (e.g. HTTP 400 + {"success":0,"error":"..."}).  Return the
                 -- body so callers can surface the real error message.
                 if response_body and response_body ~= "" then
-                    return response_body
+                    return response_body, nil, false
                 end
-                return nil, status or ("HTTP " .. tostring(code))
+                return nil, status or ("HTTP " .. tostring(code)), false
             end
         else
-            return response_body
+            return response_body, nil, false
         end
     end
-    return nil, "Too many redirects"
+    return nil, "Too many redirects", false
 end
 
--- GET/POST that returns the parsed JSON payload (or nil, err).
+-- GET/POST that returns the parsed JSON payload (or nil, err, transport_error).
 local function requestJson(url_string, method, headers, body, timeout)
-    local response_body, err = httpRequest(url_string, method, headers, body, timeout)
-    if not response_body then return nil, err end
+    local response_body, err, transport_error = httpRequest(url_string, method, headers, body, timeout)
+    if not response_body then return nil, err, transport_error end
     local ok, payload = pcall(json.decode, response_body, json.decode.simple)
     if not ok or type(payload) ~= "table" then
-        return nil, "Z-Library returned invalid JSON"
+        -- The mirror answered but not with JSON (e.g. a rate-limit page).
+        -- Not a transport failure: don't fall back to the next mirror.
+        return nil, "Z-Library returned an unexpected response", false
     end
-    return payload
+    return payload, nil, false
 end
 
--- Make a request, falling back through every seed URL when the configured
--- (or first) base is unreachable.  Transport failures (timeout, DNS, reset)
--- advance to the next seed; a live API answer — even an error payload — stops
--- the loop, since that host is reachable and the error is a real one.
+-- Make a request, falling back to the next seed URL only when the previous one
+-- failed at the transport level (timeout, DNS, reset).  A mirror that answers
+-- — even with an error payload or a rate-limit page — stops the loop, because
+-- that host is reachable and trying more mirrors would only waste time.
 --
--- Fallback mirrors are probed with a short timeout so a dead mirror fails fast
--- instead of stalling the whole (blocking) catalog search.  The configured URL
--- — the user's explicit choice — still gets the full timeout.
+-- Seed probes use a short timeout so a dead mirror fails fast instead of
+-- stalling the whole (blocking) catalog search.  Only the user's configured
+-- URL gets the full timeout.
 local function requestWithSeedFallback(path, method, headers, body)
     local bases = {}
     local seen = {}
@@ -289,19 +293,24 @@ local function requestWithSeedFallback(path, method, headers, body)
     for _, seed in ipairs(SEED_URLS) do add(seed) end
 
     local last_err = "All Z-Library mirrors are unreachable"
-    local max_attempts = configured and (1 + 5) or 6
+    local max_attempts = configured and (1 + 3) or 4
     for index, base in ipairs(bases) do
         if index > max_attempts then break end
-        -- Only the user's configured URL gets the full timeout; all seed
-        -- probes are short so a dead mirror fails fast instead of stalling
-        -- the whole (blocking) catalog search.
         local timeout = (configured and index == 1)
             and ZlibraryProvider.timeout or ZlibraryProvider.probe_timeout
-        local payload, err = requestJson(base .. path, method, headers, body, timeout)
+        local payload, err, transport_error = requestJson(base .. path, method, headers, body, timeout)
         if payload then
-            return payload, nil
+            -- Third return value: the full URL that worked, for callers that
+            -- need a referer on the same host (e.g. the download request).
+            return payload, nil, base .. path
         end
         last_err = err
+        -- Only advance to another mirror on a transport failure.  A reachable
+        -- mirror that returns an error (rate limit, service down) is the real
+        -- answer — stop probing.
+        if not transport_error then
+            break
+        end
     end
     return nil, last_err
 end
@@ -460,7 +469,7 @@ function ZlibraryProvider:hydrate(book)
     local details_path = string.format("/eapi/book/%s/%s", book.provider_id, book.hash)
     local link_path = string.format("/eapi/book/%s/%s/file", book.provider_id, book.hash)
 
-    local details, err = requestWithSeedFallback(details_path, "GET", authedHeaders(credentials.user_id, credentials.user_key))
+    local details, err, details_url = requestWithSeedFallback(details_path, "GET", authedHeaders(credentials.user_id, credentials.user_key))
     if not details then return nil, err end
     if tonumber(details.success) ~= 1 or not details.book then
         return nil, details.message or "Z-Library could not load this book's details."
