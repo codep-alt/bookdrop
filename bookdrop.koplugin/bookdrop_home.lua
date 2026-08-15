@@ -358,7 +358,7 @@ function StoreHome:donationBanner(width)
     return CenterContainer:new{
         dimen = Geom:new{ w = width, h = banner_h },
         Button:new{
-            text = _("♥  Support Bookdrop  ·  ko-fi.com/davidc465"),
+            text = _("♥  Tap here to support Bookdrop on Ko-fi"),
             width = width,
             height = banner_h,
             bordersize = 0,
