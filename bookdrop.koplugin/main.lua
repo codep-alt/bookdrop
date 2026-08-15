@@ -73,6 +73,8 @@ local valid_sorts = { title = true, newest = true, oldest = true }
 local valid_contents = {
     book_fiction = true, book_nonfiction = true, book_comic = true, magazine = true,
 }
+local LARGE_DOWNLOAD_BYTES = 50 * 1024 * 1024
+local MACOS_DOWNLOAD_TOTAL_TIMEOUT = 15 * 60
 
 function Bookdrop:init()
     self.settings = LuaSettings:open(DataStorage:getSettingsDir() .. "/bookdrop.lua")
@@ -819,9 +821,17 @@ function Bookdrop:downloadBook(book, acquisition)
         return
     end
 
+    local confirmation_text = T(_("Download %1 (%2) from %3?"), book.title,
+        acquisition.format or extension:upper(), book.source or _("the catalog"))
+    local download_size = tonumber(acquisition.size)
+    if download_size and download_size >= LARGE_DOWNLOAD_BYTES then
+        confirmation_text = confirmation_text .. "\n\n" .. T(
+            _("This is a large file (%1) and may take several minutes. Keep KOReader open until it finishes."),
+            string.format("%.1f MB", download_size / 1024 / 1024))
+    end
+
     UIManager:show(ConfirmBox:new{
-        text = T(_("Download %1 (%2) from %3?"), book.title,
-            acquisition.format or extension:upper(), book.source or _("the catalog")),
+        text = confirmation_text,
         ok_text = _("DOWNLOAD"),
         ok_callback = function() self:startBookDownload(book, acquisition, destination) end,
     })
@@ -841,6 +851,7 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
         local function downloadTask()
             local task_ok, task_result = xpcall(function()
                 local http = require("socket.http")
+                local ltn12 = require("ltn12")
                 local socketutil = require("socketutil")
                 local active_acquisition = acquisition
                 local headers
@@ -860,13 +871,26 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
 
                 local output, open_err = io.open(part_path, "wb")
                 if not output then error(open_err or "cannot create destination") end
-                socketutil:set_timeout(socketutil.LARGE_BLOCK_TIMEOUT, socketutil.LARGE_TOTAL_TIMEOUT)
+                -- Real e-readers use KOReader's normal streaming sink inside a
+                -- cancellable subprocess. The macOS emulator must run this task
+                -- in-process (see below), so retain a generous safety ceiling
+                -- there instead of allowing the UI to remain blocked forever.
+                local download_sink
+                if jit.os == "OSX" then
+                    socketutil:set_timeout(socketutil.FILE_BLOCK_TIMEOUT,
+                        MACOS_DOWNLOAD_TOTAL_TIMEOUT)
+                    download_sink = socketutil.file_sink(output)
+                else
+                    socketutil:set_timeout(socketutil.FILE_BLOCK_TIMEOUT,
+                        socketutil.FILE_TOTAL_TIMEOUT)
+                    download_sink = ltn12.sink.file(output)
+                end
                 local request_ok, request_result, download_code, response_headers, status = pcall(http.request, {
                     url = active_acquisition.url,
                     method = "GET",
                     redirect = true,
                     headers = headers,
-                    sink = socketutil.file_sink(output),
+                    sink = download_sink,
                 })
                 socketutil:reset_timeout()
                 pcall(function() output:close() end)
@@ -901,7 +925,15 @@ function Bookdrop:startBookDownload(book, acquisition, destination)
                     error("could not save the completed file")
                 end
                 return { success = true }
-            end, debug.traceback)
+            end, function(err)
+                local message = tostring(err or "unknown error")
+                message = message:match("^[^\n]+") or message
+                message = message:gsub("^.-main%.lua:%d+:%s*", "")
+                if message == "sink timeout" or message == "timeout" then
+                    return "the download timed out because the server was too slow; please try again"
+                end
+                return message
+            end)
             if not task_ok then
                 os.remove(part_path)
                 return { success = false, error = tostring(task_result) }
