@@ -33,4 +33,5 @@ for entry in "${SOURCES[@]}"; do
   fi
 done
 
-echo "Popular sources synced to ${TARGET_DIR} ($(ls -1 ${TARGET_DIR}/*.aix 2>/dev/null | wc -l | tr -d ' ') files)"
+source_count="$(find "${TARGET_DIR}" -maxdepth 1 -type f -name '*.aix' | wc -l | tr -d ' ')"
+echo "Popular sources synced to ${TARGET_DIR} (${source_count} files)"

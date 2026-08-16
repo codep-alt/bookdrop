@@ -20,6 +20,10 @@ echo "=== Fetching manga sources (.aix files) ==="
 echo "=== Packaging Bookdrop ==="
 cd "${ROOT_DIR}"
 
+# Always build from an empty archive. Updating an existing ZIP can leave files
+# that were deleted from the plugin or newly added to the exclusion list.
+rm -f "${OUTPUT}"
+
 # Exclude: Rust binaries (downloaded on first use), gitignore housekeeping,
 # macOS turds, and the l10n template directory.
 zip -r "${OUTPUT}" bookdrop.koplugin \
